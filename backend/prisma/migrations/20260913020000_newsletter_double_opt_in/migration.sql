@@ -1,0 +1,1 @@
+ALTER TABLE "newsletter_subscribers" ADD COLUMN "verifiedAt" TIMESTAMP(3);

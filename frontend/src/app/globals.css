@@ -1,0 +1,180 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-serif-body: var(--font-literata), ui-serif, Georgia, serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --color-parchment-50: #fdfbf5;
+  --color-parchment-100: #faf5e9;
+  --color-parchment-200: #f2e8d2;
+  --color-parchment-300: #e6d6b3;
+  --color-parchment-400: #d4bd8a;
+
+  --color-ink-50: #eef0f6;
+  --color-ink-100: #d6dae8;
+  --color-ink-300: #8b95bb;
+  --color-ink-500: #3c4a7d;
+  --color-ink-600: #2b3660;
+  --color-ink-700: #202a4d;
+  --color-ink-800: #161d38;
+  --color-ink-900: #0f1428;
+  --color-ink-950: #0a0e1c;
+
+  --color-gold-100: #f7ecc7;
+  --color-gold-300: #e6c974;
+  --color-gold-400: #cea030;
+  --color-gold-500: #b08a29;
+  --color-gold-700: #7a5f1a;
+
+  --color-sage-500: #6f8f78;
+  --color-sage-600: #587161;
+}
+
+:root {
+  --background: var(--color-parchment-50);
+  --foreground: var(--color-ink-900);
+}
+
+.dark {
+  --background: var(--color-ink-950);
+  --foreground: var(--color-parchment-100);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+table {
+  max-width: 100%;
+}
+
+.article-body,
+.ProseMirror {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .scripture-quote {
+    margin: 1.5rem 0;
+    padding: 1.25rem 1rem;
+    font-size: 1.1rem;
+  }
+
+  .article-body pre,
+  .ProseMirror pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+.paper-lift {
+  transform-style: preserve-3d;
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s ease;
+  box-shadow:
+    0 1px 2px rgba(15, 20, 40, 0.06),
+    0 8px 20px -12px rgba(15, 20, 40, 0.18);
+}
+.paper-lift:hover {
+  transform: translateY(-6px) rotateX(2deg) rotateY(-1.5deg);
+  box-shadow:
+    0 30px 45px -20px rgba(15, 20, 40, 0.28),
+    0 10px 20px -10px rgba(15, 20, 40, 0.15);
+}
+.dark .paper-lift {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 8px 24px -12px rgba(0, 0, 0, 0.5);
+}
+.dark .paper-lift:hover {
+  box-shadow:
+    0 30px 50px -20px rgba(0, 0, 0, 0.65),
+    0 10px 20px -10px rgba(0, 0, 0, 0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .paper-lift,
+  .paper-lift:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+.perspective-container {
+  perspective: 1400px;
+}
+
+.scripture-quote {
+  border: none;
+  margin: 2rem 0;
+  padding: 1.75rem 2rem;
+  background: linear-gradient(180deg, var(--color-gold-100), transparent 140%);
+  border-left: 3px solid var(--color-gold-400);
+  border-radius: 0.5rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--color-ink-700);
+}
+.dark .scripture-quote {
+  background: linear-gradient(
+    180deg,
+    rgba(206, 160, 48, 0.12),
+    transparent 140%
+  );
+  color: var(--color-parchment-100);
+}
+.scripture-quote p {
+  margin: 0;
+}
+.scripture-quote .scripture-ref {
+  margin-top: 0.75rem;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  color: var(--color-gold-700);
+  font-weight: 600;
+}
+.dark .scripture-quote .scripture-ref {
+  color: var(--color-gold-300);
+}
+
+.article-image {
+  border-radius: 0.75rem;
+  width: 100%;
+  height: auto;
+}
+
+.ProseMirror blockquote:not(.scripture-quote),
+.article-body blockquote:not(.scripture-quote) {
+  border-left: 3px solid var(--color-ink-300);
+  padding-left: 1.25rem;
+  font-style: italic;
+  color: var(--color-ink-600);
+}
+.dark .ProseMirror blockquote:not(.scripture-quote),
+.dark .article-body blockquote:not(.scripture-quote) {
+  color: var(--color-parchment-300);
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: var(--color-ink-300);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+::selection {
+  background: var(--color-gold-300);
+  color: var(--color-ink-950);
+}

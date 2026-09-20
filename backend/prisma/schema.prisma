@@ -1,0 +1,329 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String           @id @default(cuid())
+  name              String
+  email             String           @unique
+  passwordHash      String
+  role              Role             @default(ADMIN)
+  status            UserStatus       @default(ACTIVE)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  preferredLanguage String           @default("en")
+  enableTranslation Boolean          @default(false)
+  articleVersions   ArticleVersion[]
+  articles          Article[]
+  comments          Comment[]
+  profile           Profile?
+  series            Series[]
+  subscriptions     Subscription[]
+  newsletterSubscribers NewsletterSubscriber[]
+  newsletterSends    NewsletterSend[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+model EmailVerificationCode {
+  id        String    @id @default(cuid())
+  email     String
+  codeHash  String
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email, createdAt])
+  @@index([expiresAt])
+  @@map("email_verification_codes")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model Profile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  pastorName         String
+  title              String?
+  bio                String?
+  profileImage       String?
+  churchName         String?
+  contactEmail       String?
+  socialLinks        Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  watermarkType      String?
+  watermarkText      String?
+  watermarkTextSize  Int?
+  watermarkLogoUrl   String?
+  watermarkOpacity   Int?
+  watermarkLogoScale Int?
+  watermarkPosition  String?
+  watermarkTextColor String?
+  enableNewsletter   Boolean? @default(false)
+  newsLetterFrequency String? @default("weekly")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Article {
+  id                  String               @id @default(cuid())
+  title               String
+  slug                String               @unique
+  content             String
+  excerpt             String?
+  featuredImage       String?
+  status              ArticleStatus        @default(DRAFT)
+  publishedAt         DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  authorId            String
+  audioUrl            String?
+  scheduledPublishAt  DateTime?
+  proofreadingStatus  String               @default("not_started")
+  proofreadingNotes   String?
+  proofreadingUpdatedAt DateTime?
+  viewCount           Int                  @default(0)
+  seriesId            String?
+  seriesPosition      Int?
+  tags                ArticleTag[]
+  translations        ArticleTranslation[]
+  versions            ArticleVersion[]
+  views               ArticleView[]
+  author              User                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  series              Series?              @relation(fields: [seriesId], references: [id])
+  comments            Comment[]
+  shareEvents         ShareEvent[]
+  newsletterSends     NewsletterSend[]
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@index([seriesId])
+  @@index([scheduledPublishAt])
+  @@map("articles")
+}
+
+model ShareEvent {
+  id        String        @id @default(cuid())
+  articleId String
+  platform  SharePlatform
+  createdAt DateTime      @default(now())
+  article   Article       @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@map("share_events")
+}
+
+model Tag {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  slug      String       @unique
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  articles  ArticleTag[]
+
+  @@index([slug])
+  @@map("tags")
+}
+
+model ArticleTag {
+  articleId String
+  tagId     String
+  createdAt DateTime @default(now())
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([articleId])
+  @@index([tagId])
+  @@map("article_tags")
+}
+
+model ArticleView {
+  id        String   @id @default(cuid())
+  articleId String
+  viewedAt  DateTime @default(now())
+  ipHash    String?
+  userAgent String?
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([viewedAt])
+  @@map("article_views")
+}
+
+model NewsletterSubscriber {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  subscribedAt     DateTime  @default(now())
+  unsubscribedAt   DateTime?
+  unsubscribeToken String    @unique @default(cuid())
+  verified         Boolean   @default(false)
+  verifiedAt       DateTime?
+  userId            String?
+  user             User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([unsubscribedAt])
+  @@index([userId])
+  @@map("newsletter_subscribers")
+}
+
+model NewsletterSend {
+  id              String   @id @default(cuid())
+  articleId       String
+  authorId        String
+  subject         String
+  recipientCount  Int
+  frequency       String   @default("immediate")
+  sentAt          DateTime @default(now())
+  article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  author          User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, authorId])
+  @@index([authorId, sentAt])
+  @@map("newsletter_sends")
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  providerCustomerId   String?          @unique
+  providerSubscriptionId String?        @unique
+  providerPlanId      String?
+  plan               String             @default("default")
+  status             SubscriptionStatus @default(INACTIVE)
+  trialEndsAt        DateTime?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  articleId  String
+  name       String
+  email      String
+  content    String
+  approved   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  approvedAt DateTime?
+  approvedBy String?
+  approver   User?     @relation(fields: [approvedBy], references: [id])
+  article    Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([approved])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+model Series {
+  id          String    @id @default(cuid())
+  authorId    String
+  title       String
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  articles    Article[]
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([slug])
+  @@map("series")
+}
+
+model ArticleVersion {
+  id        String   @id @default(cuid())
+  articleId String
+  title     String
+  content   String
+  excerpt   String?
+  createdAt DateTime @default(now())
+  createdBy String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  creator   User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([createdAt])
+  @@map("article_versions")
+}
+
+model ArticleTranslation {
+  id          String   @id @default(cuid())
+  articleId   String
+  language    String
+  title       String
+  content     String
+  audioUrl    String?
+  generatedAt DateTime @default(now())
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, language])
+  @@index([articleId])
+  @@index([language])
+  @@map("article_translations")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INACTIVE
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum SharePlatform {
+  WHATSAPP
+  FACEBOOK
+  TWITTER
+  TELEGRAM
+  LINKEDIN
+  EMAIL
+  COPY_LINK
+  NATIVE
+}

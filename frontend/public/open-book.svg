@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>Publishing Studio open book</title>
+  <rect width="64" height="64" rx="14" fill="#1f2933"/>
+  <path d="M12 18.5c7.8-.8 14.1 1.2 20 6.1v25.2c-5.9-4.9-12.2-6.9-20-6.1V18.5Z" fill="#f4d06f"/>
+  <path d="M52 18.5c-7.8-.8-14.1 1.2-20 6.1v25.2c5.9-4.9 12.2-6.9 20-6.1V18.5Z" fill="#e8b84b"/>
+  <path d="M32 24.6v25.2" fill="none" stroke="#fff7df" stroke-linecap="round" stroke-width="2"/>
+  <path d="M16.5 25.5c4.8-.1 8.8 1 12 3.2M16.5 32c4.8-.1 8.8 1 12 3.2M47.5 25.5c-4.8-.1-8.8 1-12 3.2M47.5 32c-4.8-.1-8.8 1-12 3.2" fill="none" stroke="#fff7df" stroke-linecap="round" stroke-width="1.8" opacity=".9"/>
+</svg>

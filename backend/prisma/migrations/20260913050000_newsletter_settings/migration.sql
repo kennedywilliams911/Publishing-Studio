@@ -1,0 +1,3 @@
+ALTER TABLE "profiles"
+  ADD COLUMN IF NOT EXISTS "enableNewsletter" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS "newsLetterFrequency" TEXT NOT NULL DEFAULT 'weekly';
