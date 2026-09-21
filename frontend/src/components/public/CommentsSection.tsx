@@ -10,14 +10,28 @@ export default function CommentsSection({
   articleId,
   comments = [],
   enableComments = true,
+  id,
 }: {
   articleId: string;
   comments?: ArticleComment[];
   enableComments?: boolean;
+  id?: string;
 }) {
   const [newComments, setNewComments] = useState<ArticleComment[]>(comments);
   const [form, setForm] = useState({ name: "", email: "", content: "" });
   const [loading, setLoading] = useState(false);
+  const isCommentsEnabled = (() => {
+    if (typeof window === "undefined") return enableComments;
+
+    const saved = window.localStorage.getItem(
+      "publishing-studio:comments-enabled",
+    );
+    if (saved !== null) {
+      return saved === "true";
+    }
+
+    return enableComments;
+  })();
 
   useEffect(() => {
     async function loadComments() {
@@ -60,19 +74,22 @@ export default function CommentsSection({
 
       toast.success("Thank you! Your comment will be displayed after review.");
       setForm({ name: "", email: "", content: "" });
-    } catch (error) {
+    } catch {
       toast.error("Failed to post comment. Try again.");
     } finally {
       setLoading(false);
     }
   }
 
-  if (!enableComments) {
+  if (!isCommentsEnabled) {
     return null;
   }
 
   return (
-    <section className="rounded-2xl border border-parchment-300 bg-parchment-50 p-8 dark:border-ink-800 dark:bg-ink-900">
+    <section
+      id={id}
+      className="rounded-2xl border border-parchment-300 bg-parchment-50 p-8 dark:border-ink-800 dark:bg-ink-900"
+    >
       <div className="mb-8 flex items-center gap-3">
         <MessageCircle size={24} className="text-gold-700 dark:text-gold-400" />
         <h3 className="font-display text-2xl font-semibold text-ink-900 dark:text-parchment-50">

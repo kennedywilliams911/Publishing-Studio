@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { apiFetchSafe } from "@/lib/api";
 import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
-import ArticleReader from "@/components/public/ArticleReader";
 import CommentsSection from "@/components/public/CommentsSection";
 import ArticleTranslation from "@/components/public/ArticleTranslation";
 import type { ArticleFull } from "@/types/article";
@@ -84,7 +83,11 @@ export default async function PublisherArticlePage({
               translatorTargetId="publisher-article-translator"
             />
             <div className="mx-auto max-w-2xl px-4 pb-12 md:px-0">
-              <CommentsSection articleId={article.id} comments={[]} />
+              <CommentsSection
+                articleId={article.id}
+                comments={[]}
+                enableComments={profile?.enableComments ?? false}
+              />
             </div>
           </div>
           <div id="publisher-article-translator" className="lg:pt-14" />

@@ -14,6 +14,11 @@ const PUBLISH_SOUND_KEY = "publishing-studio:publish-sound-enabled";
 
 export default function SettingsForm({ profile }: { profile: Profile | null }) {
   const router = useRouter();
+  const profileSyncKey = [
+    profile?.enableNewsletter ?? "0",
+    profile?.enableComments ?? "0",
+    profile?.newsLetterFrequency ?? "weekly",
+  ].join("-");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,12 +31,42 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
       typeof window === "undefined" ||
       window.localStorage.getItem(PUBLISH_SOUND_KEY) !== "false",
   );
-  const [newsletterEnabled, setNewsletterEnabled] = useState(
-    profile?.enableNewsletter ?? false,
-  );
+  const [newsletterEnabled, setNewsletterEnabled] = useState(() => {
+    if (typeof window === "undefined")
+      return profile?.enableNewsletter ?? false;
+
+    const saved = window.localStorage.getItem(
+      "publishing-studio:newsletter-enabled",
+    );
+    return saved !== null
+      ? saved === "true"
+      : (profile?.enableNewsletter ?? false);
+  });
+  const [commentsEnabled, setCommentsEnabled] = useState(() => {
+    if (typeof window === "undefined") return profile?.enableComments ?? true;
+
+    const saved = window.localStorage.getItem(
+      "publishing-studio:comments-enabled",
+    );
+    return saved !== null
+      ? saved === "true"
+      : (profile?.enableComments ?? true);
+  });
   const [newsletterFrequency, setNewsletterFrequency] = useState<
     Profile["newsLetterFrequency"]
-  >(profile?.newsLetterFrequency ?? "weekly");
+  >(() => {
+    if (typeof window === "undefined")
+      return profile?.newsLetterFrequency ?? "weekly";
+
+    const saved = window.localStorage.getItem(
+      "publishing-studio:newsletter-frequency",
+    );
+    return (
+      (saved as Profile["newsLetterFrequency"]) ??
+      profile?.newsLetterFrequency ??
+      "weekly"
+    );
+  });
 
   function handlePublishSoundChange(enabled: boolean) {
     setPublishSoundEnabled(enabled);
@@ -59,6 +94,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
         watermarkLogoScale: profile?.watermarkLogoScale ?? 18,
         watermarkPosition: profile?.watermarkPosition ?? "south_east",
         enableNewsletter: newsletterEnabled,
+        enableComments: commentsEnabled,
         newsLetterFrequency: newsletterFrequency,
       };
 
@@ -72,7 +108,23 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to update settings");
 
-      toast.success("Newsletter settings updated.");
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(
+          "publishing-studio:comments-enabled",
+          String(commentsEnabled),
+        );
+        window.localStorage.setItem(
+          "publishing-studio:newsletter-enabled",
+          String(newsletterEnabled),
+        );
+        window.localStorage.setItem(
+          "publishing-studio:newsletter-frequency",
+          newsletterFrequency,
+        );
+      }
+
+      toast.success("Reader engagement settings updated.");
+      router.refresh();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to update settings.",
@@ -146,7 +198,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div key={profileSyncKey} className="space-y-6">
       <div className="rounded-2xl border border-parchment-300 bg-white p-6 dark:border-ink-800 dark:bg-ink-900">
         <h2 className="mb-1 font-display text-lg font-semibold text-ink-900 dark:text-parchment-50">
           Appearance
@@ -168,21 +220,33 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
 
       <div className="rounded-2xl border border-parchment-300 bg-white p-6 dark:border-ink-800 dark:bg-ink-900">
         <h2 className="mb-1 font-display text-lg font-semibold text-ink-900 dark:text-parchment-50">
-          Newsletter
+          Public reader engagement
         </h2>
         <p className="mb-4 text-sm text-ink-500 dark:text-parchment-300">
-          Control how the public newsletter signup behaves.
+          Control how readers can participate on your public articles.
         </p>
 
-        <label className="flex items-center gap-3 text-sm text-ink-700 dark:text-parchment-200">
-          <input
-            type="checkbox"
-            checked={newsletterEnabled}
-            onChange={(event) => setNewsletterEnabled(event.target.checked)}
-            className="h-4 w-4 accent-gold-500"
-          />
-          Enable newsletter signup form
-        </label>
+        <div className="space-y-4">
+          <label className="flex items-center gap-3 text-sm text-ink-700 dark:text-parchment-200">
+            <input
+              type="checkbox"
+              checked={commentsEnabled}
+              onChange={(event) => setCommentsEnabled(event.target.checked)}
+              className="h-4 w-4 accent-gold-500"
+            />
+            Enable reader comments on public articles
+          </label>
+
+          <label className="flex items-center gap-3 text-sm text-ink-700 dark:text-parchment-200">
+            <input
+              type="checkbox"
+              checked={newsletterEnabled}
+              onChange={(event) => setNewsletterEnabled(event.target.checked)}
+              className="h-4 w-4 accent-gold-500"
+            />
+            Enable newsletter signup form
+          </label>
+        </div>
 
         <div className="mt-4 space-y-2">
           <label className="text-sm font-medium text-ink-700 dark:text-parchment-200">
@@ -209,7 +273,9 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
           disabled={savingProfileSettings}
           className="mt-5 inline-flex items-center gap-2 rounded-full bg-ink-900 px-5 py-2.5 text-sm font-semibold text-parchment-50 hover:bg-ink-800 disabled:opacity-60 dark:bg-gold-400 dark:text-ink-950 dark:hover:bg-gold-300"
         >
-          {savingProfileSettings ? "Saving..." : "Save newsletter settings"}
+          {savingProfileSettings
+            ? "Saving..."
+            : "Save reader engagement settings"}
         </button>
       </div>
 

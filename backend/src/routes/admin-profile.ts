@@ -70,6 +70,9 @@ router.patch("/", async (req, res) => {
         ...(data.enableNewsletter !== undefined
           ? { enableNewsletter: data.enableNewsletter }
           : {}),
+        ...(data.enableComments !== undefined
+          ? { enableComments: data.enableComments }
+          : {}),
         ...(data.newsLetterFrequency !== undefined
           ? { newsLetterFrequency: data.newsLetterFrequency }
           : {}),
@@ -91,7 +94,8 @@ router.patch("/", async (req, res) => {
         watermarkOpacity: data.watermarkOpacity ?? 55,
         watermarkLogoScale: data.watermarkLogoScale ?? 18,
         watermarkPosition: data.watermarkPosition ?? "south_east",
-        enableNewsletter: data.enableNewsletter ?? false,
+        enableNewsletter: data.enableNewsletter ?? true,
+        enableComments: data.enableComments ?? true,
         newsLetterFrequency: data.newsLetterFrequency ?? "weekly",
       },
     });

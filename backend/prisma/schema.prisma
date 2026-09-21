@@ -78,10 +78,11 @@ model Profile {
   watermarkOpacity   Int?
   watermarkLogoScale Int?
   watermarkPosition  String?
-  watermarkTextColor String?
-  enableNewsletter   Boolean? @default(false)
-  newsLetterFrequency String? @default("weekly")
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  watermarkTextColor    String?
+  enableNewsletter      Boolean? @default(true)
+  enableComments        Boolean? @default(true)
+  newsLetterFrequency   String? @default("weekly")
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
 }

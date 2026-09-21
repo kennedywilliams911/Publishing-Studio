@@ -84,6 +84,7 @@ export const profileInputSchema = z.object({
   watermarkLogoScale: z.number().int().min(5).max(40).optional(),
   watermarkPosition: z.enum(GRAVITY_VALUES).optional(),
   enableNewsletter: z.boolean().optional(),
+  enableComments: z.boolean().optional(),
   newsLetterFrequency: z.enum(["daily", "weekly", "monthly"]).optional(),
 });
 

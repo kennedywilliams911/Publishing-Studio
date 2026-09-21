@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { apiFetchSafe } from "@/lib/api";
 import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
-import ArticleReader from "@/components/public/ArticleReader";
 import ArticleCard from "@/components/public/ArticleCard";
 import ArticleTranslation from "@/components/public/ArticleTranslation";
 import CommentsSection from "@/components/public/CommentsSection";
@@ -153,7 +152,6 @@ export default async function ArticlePage({
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* eslint-disable-next-line react/no-danger */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -192,7 +190,11 @@ export default async function ArticlePage({
           </div>
 
           <div className="mx-auto max-w-4xl px-4 pb-8 md:px-0">
-            <CommentsSection articleId={article.id} comments={[]} />
+            <CommentsSection
+              articleId={article.id}
+              comments={[]}
+              enableComments={profile?.enableComments ?? false}
+            />
           </div>
 
           {series && seriesArticles.length > 0 && (

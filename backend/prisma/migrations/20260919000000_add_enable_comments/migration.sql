@@ -1,0 +1,2 @@
+ALTER TABLE "profiles"
+  ADD COLUMN IF NOT EXISTS "enableComments" BOOLEAN NOT NULL DEFAULT false;
