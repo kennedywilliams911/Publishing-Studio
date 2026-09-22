@@ -3,7 +3,11 @@ import { apiFetchSafe } from "@/lib/api";
 import AdminShell from "@/components/admin/AdminShell";
 import type { Profile } from "@/types/profile";
 
-export const metadata = { robots: { index: false, follow: false } };
+export const metadata = {
+  robots: { index: false, follow: false },
+};
+
+export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({
   children,
@@ -16,6 +20,7 @@ export default async function DashboardLayout({
     getCurrentSession(),
     apiFetchSafe<{ profile: Profile | null }>("/api/admin/profile"),
   ]);
+
   const pastorName =
     profileData?.profile?.pastorName?.trim() || session?.name || "Publisher";
 
