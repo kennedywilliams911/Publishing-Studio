@@ -10,27 +10,34 @@ import type { Profile } from "@/types/profile";
 
 const inputClass =
   "w-full rounded-lg border border-parchment-300 bg-parchment-50 px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-100 dark:border-ink-700 dark:bg-ink-800 dark:text-parchment-50";
+
 const PUBLISH_SOUND_KEY = "publishing-studio:publish-sound-enabled";
 
 export default function SettingsForm({ profile }: { profile: Profile | null }) {
   const router = useRouter();
+
   const profileSyncKey = [
     profile?.enableNewsletter ?? "0",
     profile?.enableComments ?? "0",
     profile?.newsLetterFrequency ?? "weekly",
   ].join("-");
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
+
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
+
   const [savingProfileSettings, setSavingProfileSettings] = useState(false);
+
   const [publishSoundEnabled, setPublishSoundEnabled] = useState(
     () =>
       typeof window === "undefined" ||
       window.localStorage.getItem(PUBLISH_SOUND_KEY) !== "false",
   );
+
   const [newsletterEnabled, setNewsletterEnabled] = useState(() => {
     if (typeof window === "undefined")
       return profile?.enableNewsletter ?? false;
@@ -38,20 +45,24 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
     const saved = window.localStorage.getItem(
       "publishing-studio:newsletter-enabled",
     );
+
     return saved !== null
       ? saved === "true"
       : (profile?.enableNewsletter ?? false);
   });
+
   const [commentsEnabled, setCommentsEnabled] = useState(() => {
     if (typeof window === "undefined") return profile?.enableComments ?? true;
 
     const saved = window.localStorage.getItem(
       "publishing-studio:comments-enabled",
     );
+
     return saved !== null
       ? saved === "true"
       : (profile?.enableComments ?? true);
   });
+
   const [newsletterFrequency, setNewsletterFrequency] = useState<
     Profile["newsLetterFrequency"]
   >(() => {
@@ -61,6 +72,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
     const saved = window.localStorage.getItem(
       "publishing-studio:newsletter-frequency",
     );
+
     return (
       (saved as Profile["newsLetterFrequency"]) ??
       profile?.newsLetterFrequency ??
@@ -106,20 +118,25 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to update settings");
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to update settings");
+      }
 
       if (typeof window !== "undefined") {
         window.localStorage.setItem(
           "publishing-studio:comments-enabled",
           String(commentsEnabled),
         );
+
         window.localStorage.setItem(
           "publishing-studio:newsletter-enabled",
           String(newsletterEnabled),
         );
+
         window.localStorage.setItem(
           "publishing-studio:newsletter-frequency",
-          newsletterFrequency,
+          newsletterFrequency ?? "weekly",
         );
       }
 
@@ -136,11 +153,14 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (newPassword !== confirmPassword) {
       toast.error("New passwords do not match.");
       return;
     }
+
     setSaving(true);
+
     try {
       const res = await fetch(apiUrl("/api/admin/settings/password"), {
         method: "PATCH",
@@ -148,9 +168,15 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
         credentials: "include",
         body: JSON.stringify({ currentPassword, newPassword }),
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+
+      if (!res.ok) {
+        throw new Error(data.error);
+      }
+
       toast.success("Password updated successfully.");
+
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -163,6 +189,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
 
   async function handleDeleteAccount(e: React.FormEvent) {
     e.preventDefault();
+
     if (
       !window.confirm(
         "This will permanently delete your account and all related data. This action cannot be undone.",
@@ -170,12 +197,14 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
     ) {
       return;
     }
+
     if (!deletePassword.trim()) {
       toast.error("Enter your current password to confirm account deletion.");
       return;
     }
 
     setDeleting(true);
+
     try {
       const res = await fetch(apiUrl("/api/admin/settings/account"), {
         method: "DELETE",
@@ -183,9 +212,15 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
         credentials: "include",
         body: JSON.stringify({ currentPassword: deletePassword }),
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+
+      if (!res.ok) {
+        throw new Error(data.error);
+      }
+
       toast.success("Your account has been deleted.");
+
       router.push("/admin/login");
       router.refresh();
     } catch (err) {
@@ -203,10 +238,13 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
         <h2 className="mb-1 font-display text-lg font-semibold text-ink-900 dark:text-parchment-50">
           Appearance
         </h2>
+
         <p className="mb-3 text-sm text-ink-500 dark:text-parchment-300">
           Choose how your dashboard looks.
         </p>
+
         <ThemeToggle />
+
         <label className="mt-5 flex items-center gap-3 text-sm text-ink-700 dark:text-parchment-200">
           <input
             type="checkbox"
@@ -222,6 +260,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
         <h2 className="mb-1 font-display text-lg font-semibold text-ink-900 dark:text-parchment-50">
           Public reader engagement
         </h2>
+
         <p className="mb-4 text-sm text-ink-500 dark:text-parchment-300">
           Control how readers can participate on your public articles.
         </p>
@@ -252,6 +291,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
           <label className="text-sm font-medium text-ink-700 dark:text-parchment-200">
             Newsletter frequency
           </label>
+
           <select
             value={newsletterFrequency}
             onChange={(event) =>
@@ -286,10 +326,12 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
         <h2 className="font-display text-lg font-semibold text-ink-900 dark:text-parchment-50">
           Change Password
         </h2>
+
         <div>
           <label className="mb-1.5 block text-sm font-medium text-ink-700 dark:text-parchment-200">
             Current Password
           </label>
+
           <input
             type="password"
             required
@@ -298,10 +340,12 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
             className={inputClass}
           />
         </div>
+
         <div>
           <label className="mb-1.5 block text-sm font-medium text-ink-700 dark:text-parchment-200">
             New Password
           </label>
+
           <input
             type="password"
             required
@@ -311,10 +355,12 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
             className={inputClass}
           />
         </div>
+
         <div>
           <label className="mb-1.5 block text-sm font-medium text-ink-700 dark:text-parchment-200">
             Confirm New Password
           </label>
+
           <input
             type="password"
             required
@@ -324,10 +370,11 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
             className={inputClass}
           />
         </div>
+
         <button
           type="submit"
           disabled={saving}
-          className="flex items-center gap-2 rounded-full bg-ink-900 px-5 py-2.5 text-sm font-semibold text-parchment-50 hover:bg-ink-800 disabled:opacity-60 dark:bg-gold-400 dark:text-ink-950 dark:hover:bg-gold-300"
+          className="flex items-center gap-2 rounded-full bg-ink-900 px-5 py-2.5 text-sm font-semibold text-parchment-50 hover:bg-ink-800 disabled:opacity-60 dark:bg-gold-400 dark:text-ink-950"
         >
           {saving ? (
             <Loader2 size={15} className="animate-spin" />
@@ -345,14 +392,17 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
         <h2 className="font-display text-lg font-semibold text-red-900 dark:text-red-200">
           Delete Account
         </h2>
+
         <p className="text-sm text-red-700 dark:text-red-300">
           Permanently remove your account and all associated content. This
           action cannot be undone.
         </p>
+
         <div>
           <label className="mb-1.5 block text-sm font-medium text-red-800 dark:text-red-200">
             Current Password
           </label>
+
           <input
             type="password"
             value={deletePassword}
@@ -361,6 +411,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
             placeholder="Enter your current password"
           />
         </div>
+
         <button
           type="submit"
           disabled={deleting}
