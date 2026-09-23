@@ -48,11 +48,23 @@ export default function ImageUploadField({
           credentials: "include",
           body: formData,
         });
-        const data = await res.json();
+        const responseText = await res.text();
+        let data: { url?: string; error?: string; message?: string } = {};
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch {
+          data = {};
+        }
         if (!res.ok) {
           toast.error(
-            data.error || "Something went wrong while uploading the image.",
+            data.error ||
+              data.message ||
+              `Image upload failed (${res.status}). Please try again.`,
           );
+          return;
+        }
+        if (!data.url) {
+          toast.error("Upload completed but no image URL was returned.");
           return;
         }
         onChange(data.url);

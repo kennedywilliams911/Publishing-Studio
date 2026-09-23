@@ -3,13 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  X,
-  Link2,
-  Mail,
-  Share2,
-  Check,
-} from "lucide-react";
+import { X, Link2, Mail, Share2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiUrl } from "@/lib/api-client";
@@ -24,8 +18,8 @@ type Platform =
   | "COPY_LINK"
   | "NATIVE";
 
-function buildShareText(title: string, url: string) {
-  return `✨ New Article\n\n${title}\n\nRead the full article:\n${url}`;
+function buildShareText(title: string, url: string, author?: string) {
+  return `✨ New Article\n\n${title}${author ? `\nBy ${author}` : ""}\n\nRead the full article:\n${url}`;
 }
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -39,13 +33,17 @@ function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
 
 const PLATFORM_META: Record<
   Exclude<Platform, "NATIVE" | "COPY_LINK">,
-  { label: string; color: string; getUrl: (url: string, title: string) => string }
+  {
+    label: string;
+    color: string;
+    getUrl: (url: string, title: string, author?: string) => string;
+  }
 > = {
   WHATSAPP: {
     label: "WhatsApp",
     color: "bg-[#25D366] hover:bg-[#1fbd5a]",
-    getUrl: (url, title) =>
-      `https://wa.me/?text=${encodeURIComponent(buildShareText(title, url))}`,
+    getUrl: (url, title, author) =>
+      `https://wa.me/?text=${encodeURIComponent(buildShareText(title, url, author))}`,
   },
   FACEBOOK: {
     label: "Facebook",
@@ -58,7 +56,7 @@ const PLATFORM_META: Record<
     color: "bg-ink-900 hover:bg-ink-950",
     getUrl: (url, title) =>
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-        title
+        title,
       )}&url=${encodeURIComponent(url)}`,
   },
   TELEGRAM: {
@@ -66,7 +64,7 @@ const PLATFORM_META: Record<
     color: "bg-[#26A5E4] hover:bg-[#1e8fc7]",
     getUrl: (url, title) =>
       `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(
-        title
+        title,
       )}`,
   },
   LINKEDIN: {
@@ -78,9 +76,9 @@ const PLATFORM_META: Record<
   EMAIL: {
     label: "Email",
     color: "bg-ink-500 hover:bg-ink-600",
-    getUrl: (url, title) =>
+    getUrl: (url, title, author) =>
       `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(
-        buildShareText(title, url)
+        buildShareText(title, url, author),
       )}`,
   },
 };
@@ -102,11 +100,13 @@ export default function ShareModal({
   articleId,
   title,
   url,
+  author,
   trigger,
 }: {
   articleId: string;
   title: string;
   url: string;
+  author?: string;
   trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -117,7 +117,7 @@ export default function ShareModal({
   useEffect(() => {
     setMounted(true);
     setCanNativeShare(
-      typeof navigator !== "undefined" && typeof navigator.share === "function"
+      typeof navigator !== "undefined" && typeof navigator.share === "function",
     );
   }, []);
 
@@ -202,18 +202,18 @@ export default function ShareModal({
                     {(
                       Object.entries(PLATFORM_META) as [
                         keyof typeof PLATFORM_META,
-                        (typeof PLATFORM_META)[keyof typeof PLATFORM_META]
+                        (typeof PLATFORM_META)[keyof typeof PLATFORM_META],
                       ][]
                     ).map(([key, meta]) => (
                       <a
                         key={key}
-                        href={meta.getUrl(url, title)}
+                        href={meta.getUrl(url, title, author)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => logShare(articleId, key)}
                         className={cn(
                           "flex flex-col items-center gap-1.5 rounded-xl px-2 py-3 text-xs font-medium text-white shadow-sm transition",
-                          meta.color
+                          meta.color,
                         )}
                       >
                         {key === "WHATSAPP" ? (
@@ -237,14 +237,18 @@ export default function ShareModal({
                     onClick={handleCopy}
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-parchment-300 bg-white px-4 py-3 text-sm font-medium text-ink-700 transition hover:bg-parchment-100 dark:border-ink-700 dark:bg-ink-800 dark:text-parchment-100 dark:hover:bg-ink-700"
                   >
-                    {copied ? <Check size={16} className="text-sage-600" /> : <Link2 size={16} />}
+                    {copied ? (
+                      <Check size={16} className="text-sage-600" />
+                    ) : (
+                      <Link2 size={16} />
+                    )}
                     {copied ? "Link copied!" : "Copy link"}
                   </button>
                 </motion.div>
               </motion.div>
             )}
           </AnimatePresence>,
-          document.body
+          document.body,
         )}
     </>
   );

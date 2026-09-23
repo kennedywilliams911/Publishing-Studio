@@ -49,9 +49,11 @@ export async function generateMetadata({
   ]);
   if (!article) return { title: "Article not found" };
 
-  const description = article.excerpt || excerptFromHtml(article.content);
+  const excerpt = article.excerpt || excerptFromHtml(article.content);
   const url = `${appUrl}/articles/${article.slug}`;
   const profile = profileData?.profile ?? null;
+  const author = profile?.pastorName || profile?.churchName || null;
+  const description = author ? `By ${author}\n${excerpt}` : excerpt;
   const transform = buildWatermarkTransform(profile);
   // Fall back to the pastor's profile photo so a share always has an image,
   // even if this particular article was published without a featured image.
@@ -65,6 +67,8 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       title: article.title,
+      siteName: profile?.churchName || undefined,
+      authors: author ? [author] : undefined,
       description,
       url,
       images: previewImage
@@ -185,6 +189,7 @@ export default async function ArticlePage({
                 articleId={article.id}
                 title={article.title}
                 url={publicUrl}
+                author={author ?? undefined}
               />
             </Suspense>
           </div>

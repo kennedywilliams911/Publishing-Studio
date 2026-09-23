@@ -36,7 +36,9 @@ export async function generateMetadata({
   if (!data?.article) return { title: "Article not found" };
 
   const { article, profile } = data;
-  const description = article.excerpt || excerptFromHtml(article.content);
+  const excerpt = article.excerpt || excerptFromHtml(article.content);
+  const author = profile?.pastorName || profile?.churchName || null;
+  const description = author ? `By ${author}\n${excerpt}` : excerpt;
   const transform = buildWatermarkTransform(profile);
   const sourceImage = article.featuredImage || profile?.profileImage || null;
   const previewImage = buildShareImageUrl(sourceImage, transform);
@@ -49,6 +51,8 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       title: article.title,
+      siteName: profile?.churchName || undefined,
+      authors: author ? [author] : undefined,
       description,
       url,
       images: previewImage
