@@ -32,12 +32,21 @@ async function proxy(request: NextRequest) {
       ? undefined
       : await request.arrayBuffer();
 
-  const backendResponse = await fetch(url, {
-    method: request.method,
-    headers,
-    body,
-    cache: "no-store",
-  });
+  let backendResponse: Response;
+  try {
+    backendResponse = await fetch(url, {
+      method: request.method,
+      headers,
+      body,
+      cache: "no-store",
+    });
+  } catch (error) {
+    console.error("Backend proxy request failed", { url, error });
+    return NextResponse.json(
+      { error: "The backend service is unavailable. Please try again." },
+      { status: 502 },
+    );
+  }
 
   const responseBody = await backendResponse.arrayBuffer();
 

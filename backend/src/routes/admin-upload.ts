@@ -71,8 +71,7 @@ router.post("/", imageUpload.single("file"), async (req, res) => {
   }
 
   try {
-    const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-    const result = await uploadImage(dataUri, folder);
+    const result = await uploadImage(file.buffer, folder);
     res.json({ url: result.url });
   } catch (err) {
     console.error("Image upload failed", err);
@@ -124,7 +123,8 @@ router.post("/audio", audioUpload.single("file"), async (req, res) => {
 router.use((err: any, _req: any, res: any, next: any) => {
   if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
-      error: "That file is too large. Please use a file under 250MB.",
+      error:
+        "That file is too large. Images must be under 8MB and audio must be under 250MB.",
     });
   }
   next(err);

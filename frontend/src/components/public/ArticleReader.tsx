@@ -67,9 +67,13 @@ export default function ArticleReader({
   const [speechRate, setSpeechRate] = useState(1);
   const [speechGender, setSpeechGender] = useState<"female" | "male">("female");
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [speechSupported] = useState(
-    () => typeof window !== "undefined" && "speechSynthesis" in window,
-  );
+  const [speechSupported, setSpeechSupported] = useState(false);
+
+  useEffect(() => {
+    setSpeechSupported(
+      typeof window !== "undefined" && "speechSynthesis" in window,
+    );
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {

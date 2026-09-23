@@ -20,20 +20,34 @@ export type AudioUploadResult = {
   duration: number;
 };
 /**
- * Uploads a base64-encoded image (or remote/local file path) to Cloudinary,
- * applying automatic format + quality optimization and a sane max size.
+ * Uploads an image buffer to Cloudinary, applying automatic format + quality
+ * optimization and a sane max size.
  */
 export async function uploadImage(
-  dataUri: string,
+  fileBuffer: Buffer,
   folder: "profile" | "articles" | "watermark",
 ): Promise<UploadResult> {
-  const result = await cloudinary.uploader.upload(dataUri, {
-    folder: `pastor-articles/${folder}`,
-    resource_type: "image",
-    transformation: [
-      { width: 1600, height: 1600, crop: "limit" },
-      { quality: "auto", fetch_format: "auto" },
-    ],
+  const result = await new Promise<any>((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: `pastor-articles/${folder}`,
+        resource_type: "image",
+        transformation: [
+          { width: 1600, height: 1600, crop: "limit" },
+          { quality: "auto", fetch_format: "auto" },
+        ],
+      },
+      (error, uploaded) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(uploaded);
+      },
+    );
+
+    uploadStream.end(fileBuffer);
   });
 
   return {
