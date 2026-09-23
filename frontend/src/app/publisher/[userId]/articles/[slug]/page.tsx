@@ -5,6 +5,7 @@ import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
 import CommentsSection from "@/components/public/CommentsSection";
 import ArticleTranslation from "@/components/public/ArticleTranslation";
+import { excerptFromHtml } from "@/lib/utils";
 import {
   buildWatermarkTransform,
   buildShareImageUrl,
@@ -35,7 +36,7 @@ export async function generateMetadata({
   if (!data?.article) return { title: "Article not found" };
 
   const { article, profile } = data;
-  const description = article.excerpt || undefined;
+  const description = article.excerpt || excerptFromHtml(article.content);
   const transform = buildWatermarkTransform(profile);
   const sourceImage = article.featuredImage || profile?.profileImage || null;
   const previewImage = buildShareImageUrl(sourceImage, transform);
