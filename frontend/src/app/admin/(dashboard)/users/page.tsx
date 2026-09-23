@@ -1,5 +1,5 @@
 import { getCurrentSession } from "@/lib/auth";
-import { apiFetchSafe } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import UserManagementTable from "@/components/admin/UserManagementTable";
 
 export const metadata = { title: "Users" };
@@ -23,7 +23,7 @@ export default async function UsersPage() {
         You do not have permission to view this page.
       </p>
     );
-  const data = await apiFetchSafe<{
+  const data = await apiFetch<{
     users: User[];
     total: number;
     summary: { active: number; trials: number; suspended: number };
