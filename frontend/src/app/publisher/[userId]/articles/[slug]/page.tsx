@@ -5,6 +5,12 @@ import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
 import CommentsSection from "@/components/public/CommentsSection";
 import ArticleTranslation from "@/components/public/ArticleTranslation";
+import {
+  buildWatermarkTransform,
+  buildShareImageUrl,
+  SHARE_IMAGE_WIDTH,
+  SHARE_IMAGE_HEIGHT,
+} from "@/lib/watermark";
 import type { ArticleFull } from "@/types/article";
 import type { Profile } from "@/types/profile";
 
@@ -26,11 +32,44 @@ export async function generateMetadata({
   const { userId, slug } = await params;
   const data = await getPublisherArticle(userId, slug);
   const siteName = data?.profile?.churchName?.trim() || "Publishing Studio";
+  if (!data?.article) return { title: "Article not found" };
+
+  const { article, profile } = data;
+  const description = article.excerpt || undefined;
+  const transform = buildWatermarkTransform(profile);
+  const sourceImage = article.featuredImage || profile?.profileImage || null;
+  const previewImage = buildShareImageUrl(sourceImage, transform);
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/publisher/${userId}/articles/${article.slug}`;
+
   return {
-    title: data?.article.title
-      ? { absolute: `${data.article.title} | ${siteName}` }
-      : "Article not found",
-    description: data?.article.excerpt || undefined,
+    title: { absolute: `${article.title} | ${siteName}` },
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      title: article.title,
+      description,
+      url,
+      images: previewImage
+        ? [
+            {
+              url: previewImage,
+              width: SHARE_IMAGE_WIDTH,
+              height: SHARE_IMAGE_HEIGHT,
+              alt: article.title,
+            },
+          ]
+        : undefined,
+      publishedTime: article.publishedAt ?? undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description,
+      images: previewImage
+        ? [{ url: previewImage, alt: article.title }]
+        : undefined,
+    },
   };
 }
 
