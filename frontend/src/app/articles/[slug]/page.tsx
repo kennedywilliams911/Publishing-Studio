@@ -2,14 +2,18 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
+
 import { apiFetchSafe } from "@/lib/api";
+
 import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
 import ArticleCard from "@/components/public/ArticleCard";
 import ArticleTranslation from "@/components/public/ArticleTranslation";
 import CommentsSection from "@/components/public/CommentsSection";
 import SeriesNavigation from "@/components/public/SeriesNavigation";
+
 import { excerptFromHtml } from "@/lib/utils";
+
 import {
   buildWatermarkTransform,
   watermarkImageUrl,
@@ -17,6 +21,7 @@ import {
   SHARE_IMAGE_WIDTH,
   SHARE_IMAGE_HEIGHT,
 } from "@/lib/watermark";
+
 import type { ArticleFull, ArticleSummary } from "@/types/article";
 import type { Profile } from "@/types/profile";
 
@@ -29,11 +34,12 @@ const ShareModal = dynamic(() => import("@/components/ShareModal"), {
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 async function getArticle(slug: string) {
-  // The backend already enforces draft protection (404s anything that isn't
-  // published), so a successful response here is always safe to render.
+  // The backend already enforces draft protection (404s anything
+  // that isn't published), so a successful response here is safe to render.
   const data = await apiFetchSafe<{ article: ArticleFull }>(
     `/api/public/articles/${slug}`,
   );
+
   return data?.article ?? null;
 }
 
@@ -43,27 +49,45 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+
   const [article, profileData] = await Promise.all([
     getArticle(slug),
     apiFetchSafe<{ profile: Profile | null }>("/api/public/profile"),
   ]);
-  if (!article) return { title: "Article not found" };
+
+  if (!article) {
+    return {
+      title: "Article not found",
+    };
+  }
 
   const excerpt = article.excerpt || excerptFromHtml(article.content);
+
   const url = `${appUrl}/articles/${article.slug}`;
+
   const profile = profileData?.profile ?? null;
+
   const author = profile?.pastorName || profile?.churchName || null;
+
   const description = author ? `By ${author}\n${excerpt}` : excerpt;
+
   const transform = buildWatermarkTransform(profile);
-  // Fall back to the pastor's profile photo so a share always has an image,
-  // even if this particular article was published without a featured image.
+
+  // Fall back to the pastor's profile photo so a share always has
+  // an image, even if this particular article was published without
+  // a featured image.
   const sourceImage = article.featuredImage || profile?.profileImage || null;
+
   const previewImage = buildShareImageUrl(sourceImage, transform);
 
   return {
     title: article.title,
     description,
-    alternates: { canonical: url },
+
+    alternates: {
+      canonical: url,
+    },
+
     openGraph: {
       type: "article",
       title: article.title,
@@ -71,6 +95,7 @@ export async function generateMetadata({
       authors: author ? [author] : undefined,
       description,
       url,
+
       images: previewImage
         ? [
             {
@@ -81,14 +106,22 @@ export async function generateMetadata({
             },
           ]
         : undefined,
+
       publishedTime: article.publishedAt ?? undefined,
     },
+
     twitter: {
       card: "summary_large_image",
       title: article.title,
       description,
+
       images: previewImage
-        ? [{ url: previewImage, alt: article.title }]
+        ? [
+            {
+              url: previewImage,
+              alt: article.title,
+            },
+          ]
         : undefined,
     },
   };
@@ -100,38 +133,66 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
   const article = await getArticle(slug);
-  if (!article) notFound();
+
+  if (!article) {
+    notFound();
+  }
 
   const [profileData, relatedData, seriesData] = await Promise.all([
     apiFetchSafe<{ profile: Profile | null }>("/api/public/profile"),
+
     apiFetchSafe<{ items: ArticleSummary[] }>(
       `/api/public/articles?excludeId=${article.id}&limit=3`,
     ),
+
     article.series?.slug
       ? apiFetchSafe<{
           series: NonNullable<ArticleFull["series"]>;
-          articles: { id: string; slug: string; title: string }[];
+          articles: {
+            id: string;
+            slug: string;
+            title: string;
+          }[];
         }>(`/api/public/series/${article.series.slug}`)
       : Promise.resolve(null),
   ]);
 
   const profile = profileData?.profile ?? null;
+
+  const author = profile?.pastorName || profile?.churchName || null;
+
   const related = relatedData?.items ?? [];
+
   const series = seriesData?.series ?? article.series;
+
   const seriesArticles = seriesData?.articles ?? [
-    { id: article.id, slug: article.slug, title: article.title },
+    {
+      id: article.id,
+      slug: article.slug,
+      title: article.title,
+    },
   ];
+
   const siteName =
     profile?.churchName || profile?.pastorName || "Publishing Studio";
+
   const publicUrl = `${appUrl}/articles/${article.slug}`;
+
   const watermarkTransform = buildWatermarkTransform(profile);
+
   const articleTopics = [
     ...(article.tags ?? article.topics ?? []),
+
     ...(article.topic
       ? [
           typeof article.topic === "string"
-            ? { id: article.topic, name: article.topic, slug: article.topic }
+            ? {
+                id: article.topic,
+                name: article.topic,
+                slug: article.topic,
+              }
             : article.topic,
         ]
       : []),
@@ -140,25 +201,46 @@ export default async function ArticlePage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
+
     headline: article.title,
+
     description: article.excerpt || excerptFromHtml(article.content),
+
     image: article.featuredImage
       ? [watermarkImageUrl(article.featuredImage, watermarkTransform)]
       : undefined,
+
     datePublished: article.publishedAt ?? undefined,
+
     dateModified: article.updatedAt,
+
     author: profile?.pastorName
-      ? [{ "@type": "Person", name: profile.pastorName }]
+      ? [
+          {
+            "@type": "Person",
+            name: profile.pastorName,
+          },
+        ]
       : undefined,
-    publisher: { "@type": "Organization", name: siteName },
-    mainEntityOfPage: { "@type": "WebPage", "@id": publicUrl },
+
+    publisher: {
+      "@type": "Organization",
+      name: siteName,
+    },
+
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": publicUrl,
+    },
   };
 
   return (
     <div className="flex min-h-screen flex-col">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
       />
 
       <PublicHeader siteName={siteName} />
@@ -220,6 +302,7 @@ export default async function ArticlePage({
             <h2 className="mb-6 font-display text-xl font-semibold text-ink-900 dark:text-parchment-50">
               Related Articles
             </h2>
+
             <div className="grid gap-6 sm:grid-cols-3">
               {related.map((a) => (
                 <ArticleCard
