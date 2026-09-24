@@ -19,6 +19,17 @@ export type AudioUploadResult = {
   publicId: string;
   duration: number;
 };
+
+export function createAudioUploadSignature() {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const folder = "pastor-articles/audio";
+  const signature = cloudinary.utils.api_sign_request(
+    { folder, timestamp },
+    process.env.CLOUDINARY_API_SECRET || "",
+  );
+
+  return { folder, timestamp, signature };
+}
 /**
  * Uploads an image buffer to Cloudinary, applying automatic format + quality
  * optimization and a sane max size.

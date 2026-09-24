@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { uploadImage } from "../lib/cloudinary";
+import { createAudioUploadSignature, uploadImage } from "../lib/cloudinary";
 import { requireAuth } from "../middleware/requireAuth";
 
 import { uploadAudio } from "../lib/cloudinary";
@@ -84,6 +84,28 @@ router.post("/", imageUpload.single("file"), async (req, res) => {
 });
 
 // Audio upload endpoint
+router.post("/audio-signature", (req, res) => {
+  if (
+    !process.env.CLOUDINARY_CLOUD_NAME ||
+    !process.env.CLOUDINARY_API_KEY ||
+    !process.env.CLOUDINARY_API_SECRET
+  ) {
+    return res.status(503).json({
+      error:
+        "Audio storage isn't configured yet. Add your Cloudinary credentials to .env to enable uploads.",
+    });
+  }
+
+  const { folder, timestamp, signature } = createAudioUploadSignature();
+  res.json({
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    folder,
+    timestamp,
+    signature,
+  });
+});
+
 router.post("/audio", audioUpload.single("file"), async (req, res) => {
   const file = req.file;
 

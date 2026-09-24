@@ -84,42 +84,46 @@ export default function AudioUploadField({
 
     setLoading(true);
     try {
-      const candidatePaths = ["/api/upload/audio", "/api/admin/upload/audio"];
-      let lastError: Error | null = null;
-
-      for (const path of candidatePaths) {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch(apiUrl(path), {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-        });
-
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-          const uploadedUrl = getUploadedAudioUrl(data);
-          if (!uploadedUrl) {
-            throw new Error("Upload succeeded but no audio URL was returned.");
-          }
-
-          setAudioUrl(uploadedUrl);
-          onChange(uploadedUrl);
-          toast.success("Audio uploaded successfully");
-          return;
-        }
-
-        lastError = new Error(
-          data?.error ||
-            data?.message ||
-            `Upload failed for ${path} (HTTP ${res.status}).`,
+      const signatureResponse = await fetch(
+        apiUrl("/api/admin/upload/audio-signature"),
+        { credentials: "include" },
+      );
+      const signatureData = await signatureResponse.json().catch(() => ({}));
+      if (!signatureResponse.ok) {
+        throw new Error(
+          signatureData?.error ||
+            `Could not prepare audio upload (HTTP ${signatureResponse.status}).`,
         );
-        if (res.status !== 404) {
-          throw lastError;
-        }
       }
 
-      throw lastError ?? new Error("Upload failed");
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", signatureData.apiKey);
+      formData.append("timestamp", String(signatureData.timestamp));
+      formData.append("folder", signatureData.folder);
+      formData.append("signature", signatureData.signature);
+
+      const uploadResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/${encodeURIComponent(signatureData.cloudName)}/video/upload`,
+        { method: "POST", body: formData },
+      );
+      const uploadData = await uploadResponse.json().catch(() => ({}));
+      if (!uploadResponse.ok) {
+        throw new Error(
+          uploadData?.error?.message ||
+            uploadData?.error ||
+            `Cloudinary audio upload failed (HTTP ${uploadResponse.status}).`,
+        );
+      }
+
+      const uploadedUrl = getUploadedAudioUrl(uploadData);
+      if (!uploadedUrl) {
+        throw new Error("Upload succeeded but no audio URL was returned.");
+      }
+
+      setAudioUrl(uploadedUrl);
+      onChange(uploadedUrl);
+      toast.success("Audio uploaded successfully");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to upload audio",
