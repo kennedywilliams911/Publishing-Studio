@@ -86,7 +86,7 @@ export default function AudioUploadField({
     try {
       const signatureResponse = await fetch(
         apiUrl("/api/admin/upload/audio-signature"),
-        { credentials: "include" },
+        { method: "POST", credentials: "include" },
       );
       const signatureData = await signatureResponse.json().catch(() => ({}));
       if (!signatureResponse.ok) {
