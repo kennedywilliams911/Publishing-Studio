@@ -21,7 +21,7 @@ URL.
 ## Why the frontend is still Next.js, not a plain SPA
 
 The brief calls WhatsApp/Facebook link previews "VERY IMPORTANT." Getting a
-proper preview requires the *server* to respond to Facebook/WhatsApp's
+proper preview requires the _server_ to respond to Facebook/WhatsApp's
 crawler with the right Open Graph tags already in the HTML for that specific
 article — a client-side-only React app can't do that (the crawler doesn't
 run your JavaScript). So the frontend still runs Next.js Server Components
@@ -33,6 +33,7 @@ between them — not "no server-rendering."
 ## Running both locally
 
 **Terminal 1 — backend**
+
 ```bash
 cd backend
 npm install                          # also runs `prisma generate`
@@ -43,6 +44,7 @@ npm run dev                          # http://localhost:4000
 ```
 
 **Terminal 2 — frontend**
+
 ```bash
 cd frontend
 npm install
@@ -106,6 +108,7 @@ preview image used for WhatsApp/Facebook link shares.
 It's applied at **display time**, by rewriting the Cloudinary image URL with
 an overlay transformation, rather than baked into the stored file. That
 means:
+
 - Nothing is re-uploaded — turning it on affects every article, past and
   future, immediately.
 - Changing the text, logo, opacity, or position later updates every article
@@ -134,7 +137,7 @@ by voice. It automatically picks the best available method:
 
 Either way, the experience in the editor is the same: click the mic, allow
 microphone access, speak, and finished phrases are inserted at the cursor.
-A "Listening…" (or "Transcribing…", during a cloud chunk's brief upload) 
+A "Listening…" (or "Transcribing…", during a cloud chunk's brief upload)
 indicator shows what's happening.
 
 **Cost**: only the cloud fallback costs anything, and only for people using
@@ -148,8 +151,9 @@ support Chrome/Edge for free.
 
 1. **Backend** — deploy to Railway, Render, Fly.io, or any Node host.
    Provision Postgres (or point at Neon/Supabase) and Cloudinary as before.
-   Set `FRONTEND_ORIGIN` to your frontend's URL (for CORS) and, if using
-   separate top-level domains, `CROSS_SITE_COOKIES=true`.
+   Set `FRONTEND_ORIGIN` to your frontend's URL (for CORS), and set
+   `PUBLIC_APP_URL` to the public frontend URL used in email links. If using
+   separate top-level domains, set `CROSS_SITE_COOKIES=true`.
 2. **Frontend** — deploy to Vercel as usual. Set `NEXT_PUBLIC_API_URL` to
    your live backend URL and `AUTH_SECRET` to the same value as the backend.
 3. Run `npx prisma migrate deploy` and the seed script once against your

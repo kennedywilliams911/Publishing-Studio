@@ -470,6 +470,7 @@ GOOGLE_CLOUD_TTS_KEY=your_api_key
 
 # Frontend
 FRONTEND_ORIGIN=http://localhost:3000
+PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ---

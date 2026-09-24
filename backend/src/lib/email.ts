@@ -1,5 +1,31 @@
 const BREVO_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
 
+function getPublicAppUrl() {
+  const configuredUrl = (
+    process.env.PUBLIC_APP_URL ||
+    process.env.FRONTEND_ORIGIN ||
+    ""
+  )
+    .split(",")[0]
+    .trim()
+    .replace(/\/$/, "");
+
+  const isPlaceholder =
+    configuredUrl === "https://your-live-frontend-domain.com";
+  const isLocalhost = /^https?:\/\/localhost(?::\d+)?$/i.test(configuredUrl);
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    (!configuredUrl || isPlaceholder || isLocalhost)
+  ) {
+    throw new Error(
+      "PUBLIC_APP_URL must be set to the deployed frontend URL before sending emails.",
+    );
+  }
+
+  return configuredUrl || "http://localhost:3000";
+}
+
 function getBrevoConfig() {
   const apiKey = process.env.BREVO_API_KEY;
   const fromEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_FROM;
@@ -55,9 +81,7 @@ export async function sendVerificationCode(email: string, code: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const baseUrl = (
-    process.env.FRONTEND_ORIGIN || "http://localhost:3000"
-  ).replace(/\/$/, "");
+  const baseUrl = getPublicAppUrl();
   const resetUrl = `${baseUrl}/admin/reset-password?token=${encodeURIComponent(token)}`;
 
   await sendBrevoEmail({
@@ -72,9 +96,7 @@ export async function sendNewsletterConfirmationEmail(
   email: string,
   token: string,
 ) {
-  const baseUrl = (
-    process.env.FRONTEND_ORIGIN || "http://localhost:3000"
-  ).replace(/\/$/, "");
+  const baseUrl = getPublicAppUrl();
   const confirmationUrl = `${baseUrl}/newsletter/confirm?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
 
   await sendBrevoEmail({
@@ -98,8 +120,7 @@ export async function sendNewsletterNotification(params: {
   publisherProfileImage?: string | null;
   subscribers: Array<{ email: string; unsubscribeToken: string }>;
 }) {
-  const baseUrl = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
-  const siteBase = baseUrl.replace(/\/$/, "");
+  const siteBase = getPublicAppUrl();
   const articleUrl = `${siteBase}/articles/${params.articleSlug}`;
 
   if (params.subscribers.length === 0) {

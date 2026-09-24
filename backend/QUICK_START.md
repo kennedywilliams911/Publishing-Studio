@@ -146,6 +146,7 @@ Create `.env` file in backend directory:
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/pastor_articles_db
 FRONTEND_ORIGIN=http://localhost:3000
+PUBLIC_APP_URL=http://localhost:3000
 ```
 
 Optional (for full feature support):
