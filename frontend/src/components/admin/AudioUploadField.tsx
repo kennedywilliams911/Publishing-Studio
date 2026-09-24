@@ -83,14 +83,13 @@ export default function AudioUploadField({
     }
 
     setLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
       const candidatePaths = ["/api/upload/audio", "/api/admin/upload/audio"];
       let lastError: Error | null = null;
 
       for (const path of candidatePaths) {
+        const formData = new FormData();
+        formData.append("file", file);
         const res = await fetch(apiUrl(path), {
           method: "POST",
           body: formData,
@@ -111,7 +110,9 @@ export default function AudioUploadField({
         }
 
         lastError = new Error(
-          data?.error || data?.message || `Upload failed for ${path}`,
+          data?.error ||
+            data?.message ||
+            `Upload failed for ${path} (HTTP ${res.status}).`,
         );
         if (res.status !== 404) {
           throw lastError;

@@ -75,7 +75,17 @@ export async function uploadAudio(
       {
         folder: `pastor-articles/${folder}`,
         resource_type: "video",
-        allowed_formats: ["mp3", "wav", "webm", "aac", "ogg", "m4a", "mp4"],
+        allowed_formats: [
+          "mp3",
+          "wav",
+          "webm",
+          "aac",
+          "ogg",
+          "oga",
+          "opus",
+          "m4a",
+          "mp4",
+        ],
         chunk_size: 6 * 1024 * 1024,
         timeout: 10 * 60 * 1000,
       },

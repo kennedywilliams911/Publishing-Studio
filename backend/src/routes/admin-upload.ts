@@ -22,6 +22,7 @@ const ALLOWED_AUDIO_TYPES = new Set([
   "audio/webm",
   "audio/aac",
   "audio/ogg",
+  "audio/opus",
   "audio/mp4",
   "audio/x-m4a",
   "audio/m4a",
@@ -92,7 +93,8 @@ router.post("/audio", audioUpload.single("file"), async (req, res) => {
 
   if (!ALLOWED_AUDIO_TYPES.has(file.mimetype)) {
     return res.status(400).json({
-      error: "Please upload an MP3, WAV, WebM, AAC or OGG audio file.",
+      error:
+        "Please upload an MP3, WAV, OGG, Opus, M4A, WebM or AAC audio file.",
     });
   }
 
