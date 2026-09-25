@@ -31,18 +31,22 @@ export async function generateMetadata({
   params: Promise<{ userId: string; slug: string }>;
 }): Promise<Metadata> {
   const { userId, slug } = await params;
-  const data = await getPublisherArticle(userId, slug);
-  const siteName = data?.profile?.churchName?.trim() || "Publishing Studio";
+  const [data, globalProfileData] = await Promise.all([
+    getPublisherArticle(userId, slug),
+    apiFetchSafe<{ profile: Profile | null }>("/api/public/profile"),
+  ]);
+  const profile = globalProfileData?.profile ?? null;
+  const siteName = profile?.churchName?.trim() || "Publishing Studio";
   if (!data?.article) return { title: "Article not found" };
 
-  const { article, profile } = data;
+  const { article } = data;
   const excerpt = article.excerpt || excerptFromHtml(article.content);
   const author = profile?.pastorName || profile?.churchName || null;
   const description = author ? `By ${author}\n${excerpt}` : excerpt;
   const transform = buildWatermarkTransform(profile);
   const sourceImage = article.featuredImage || profile?.profileImage || null;
   const previewImage = buildShareImageUrl(sourceImage, transform);
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/publisher/${userId}/articles/${article.slug}`;
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/articles/${article.slug}`;
 
   return {
     title: { absolute: `${article.title} | ${siteName}` },

@@ -23,7 +23,7 @@ export default function ArticleCard({
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     (typeof window !== "undefined" ? window.location.origin : "");
-  const publicUrl = `${appUrl}${basePath}/${article.slug}`;
+  const publicUrl = `${appUrl}/articles/${article.slug}`;
   const displayImage = watermarkImageUrl(
     article.featuredImage,
     watermarkTransform,
