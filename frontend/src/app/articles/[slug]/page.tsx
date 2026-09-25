@@ -140,7 +140,7 @@ export default async function ArticlePage({
       `/api/public/publishers/${article.authorId}`,
     ),
     apiFetchSafe<{ items: ArticleSummary[] }>(
-      `/api/public/articles?excludeId=${article.id}&limit=3`,
+      `/api/public/publishers/${article.authorId}/articles`,
     ),
 
     article.series?.slug
@@ -159,7 +159,10 @@ export default async function ArticlePage({
 
   const author = profile?.pastorName || profile?.churchName || null;
 
-  const related = relatedData?.items ?? [];
+  const related =
+    relatedData?.items
+      .filter((relatedArticle) => relatedArticle.id !== article.id)
+      .slice(0, 3) ?? [];
 
   const series = seriesData?.series ?? article.series;
 
