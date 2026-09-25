@@ -71,7 +71,7 @@ export async function generateMetadata({
 
   const author = profile?.pastorName || profile?.churchName || null;
 
-  const description = author ? `By ${author}\n${excerpt}` : excerpt;
+  const description = author ? `By ${author}: ${excerpt}` : excerpt;
 
   const transform = buildWatermarkTransform(profile);
 

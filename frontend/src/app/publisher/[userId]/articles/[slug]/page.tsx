@@ -40,7 +40,7 @@ export async function generateMetadata({
   const { article } = data;
   const excerpt = article.excerpt || excerptFromHtml(article.content);
   const author = profile?.pastorName || profile?.churchName || null;
-  const description = author ? `By ${author}\n${excerpt}` : excerpt;
+  const description = author ? `By ${author}: ${excerpt}` : excerpt;
   const transform = buildWatermarkTransform(profile);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const sourceImage =
