@@ -42,7 +42,7 @@ export default function PublicHeader({
           </Link>
           <div className="hidden sm:block">
             <Suspense fallback={null}>
-              <SearchBar />
+              <SearchBar articlesHref={articlesHref} />
             </Suspense>
           </div>
           <ThemeToggle />

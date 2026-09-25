@@ -4,7 +4,11 @@ import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 
-export default function SearchBar() {
+export default function SearchBar({
+  articlesHref = "/articles",
+}: {
+  articlesHref?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
@@ -14,16 +18,16 @@ export default function SearchBar() {
     (e: React.FormEvent) => {
       e.preventDefault();
       if (query.trim()) {
-        router.push(`/articles?q=${encodeURIComponent(query)}`);
+        router.push(`${articlesHref}?q=${encodeURIComponent(query)}`);
         setIsOpen(false);
       }
     },
-    [query, router],
+    [articlesHref, query, router],
   );
 
   const handleClear = () => {
     setQuery("");
-    router.push("/articles");
+    router.push(articlesHref);
   };
 
   return (
