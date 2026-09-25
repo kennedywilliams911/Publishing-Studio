@@ -41,9 +41,11 @@ export async function generateMetadata({
   const author = profile?.pastorName || profile?.churchName || null;
   const description = author ? `By ${author}\n${excerpt}` : excerpt;
   const transform = buildWatermarkTransform(profile);
-  const sourceImage = article.featuredImage || profile?.profileImage || null;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const sourceImage =
+    article.featuredImage || profile?.profileImage || `${appUrl}/open-book.svg`;
   const previewImage = buildShareImageUrl(sourceImage, transform);
-  const url = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/articles/${article.slug}`;
+  const url = `${appUrl}/articles/${article.slug}`;
 
   return {
     title: { absolute: `${article.title} | ${siteName}` },
@@ -56,25 +58,21 @@ export async function generateMetadata({
       authors: author ? [author] : undefined,
       description,
       url,
-      images: previewImage
-        ? [
-            {
-              url: previewImage,
-              width: SHARE_IMAGE_WIDTH,
-              height: SHARE_IMAGE_HEIGHT,
-              alt: article.title,
-            },
-          ]
-        : undefined,
+      images: [
+        {
+          url: previewImage,
+          width: SHARE_IMAGE_WIDTH,
+          height: SHARE_IMAGE_HEIGHT,
+          alt: article.title,
+        },
+      ],
       publishedTime: article.publishedAt ?? undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: article.title,
       description,
-      images: previewImage
-        ? [{ url: previewImage, alt: article.title }]
-        : undefined,
+      images: [{ url: previewImage, alt: article.title }],
     },
   };
 }

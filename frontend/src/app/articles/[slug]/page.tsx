@@ -77,7 +77,8 @@ export async function generateMetadata({
   // Fall back to the pastor's profile photo so a share always has
   // an image, even if this particular article was published without
   // a featured image.
-  const sourceImage = article.featuredImage || profile?.profileImage || null;
+  const sourceImage =
+    article.featuredImage || profile?.profileImage || `${appUrl}/open-book.svg`;
 
   const previewImage = buildShareImageUrl(sourceImage, transform);
 
@@ -97,16 +98,14 @@ export async function generateMetadata({
       description,
       url,
 
-      images: previewImage
-        ? [
-            {
-              url: previewImage,
-              width: SHARE_IMAGE_WIDTH,
-              height: SHARE_IMAGE_HEIGHT,
-              alt: article.title,
-            },
-          ]
-        : undefined,
+      images: [
+        {
+          url: previewImage,
+          width: SHARE_IMAGE_WIDTH,
+          height: SHARE_IMAGE_HEIGHT,
+          alt: article.title,
+        },
+      ],
 
       publishedTime: article.publishedAt ?? undefined,
     },
@@ -116,14 +115,7 @@ export async function generateMetadata({
       title: article.title,
       description,
 
-      images: previewImage
-        ? [
-            {
-              url: previewImage,
-              alt: article.title,
-            },
-          ]
-        : undefined,
+      images: [{ url: previewImage, alt: article.title }],
     },
   };
 }
