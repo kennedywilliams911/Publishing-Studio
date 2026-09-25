@@ -43,10 +43,10 @@ router.get("/series", async (_req, res) => {
 
 // GET /api/public/profile
 router.get("/profile", async (_req, res) => {
-  const profile = await prisma.profile.findFirst({
-    where: { user: { status: "ACTIVE" } },
-    orderBy: { createdAt: "asc" },
-  });
+  const publisherId = await getDefaultPublisherId();
+  const profile = publisherId
+    ? await prisma.profile.findUnique({ where: { userId: publisherId } })
+    : null;
   res.json({ profile });
 });
 
