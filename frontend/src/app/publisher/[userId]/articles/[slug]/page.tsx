@@ -31,11 +31,8 @@ export async function generateMetadata({
   params: Promise<{ userId: string; slug: string }>;
 }): Promise<Metadata> {
   const { userId, slug } = await params;
-  const [data, globalProfileData] = await Promise.all([
-    getPublisherArticle(userId, slug),
-    apiFetchSafe<{ profile: Profile | null }>("/api/public/profile"),
-  ]);
-  const profile = globalProfileData?.profile ?? null;
+  const data = await getPublisherArticle(userId, slug);
+  const profile = data?.profile ?? null;
   const siteName = profile?.churchName?.trim() || "Publishing Studio";
   if (!data?.article) return { title: "Article not found" };
 

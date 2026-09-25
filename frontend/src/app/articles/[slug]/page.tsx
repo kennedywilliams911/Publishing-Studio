@@ -50,16 +50,17 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
 
-  const [article, profileData] = await Promise.all([
-    getArticle(slug),
-    apiFetchSafe<{ profile: Profile | null }>("/api/public/profile"),
-  ]);
+  const article = await getArticle(slug);
 
   if (!article) {
     return {
       title: "Article not found",
     };
   }
+
+  const profileData = await apiFetchSafe<{ profile: Profile | null }>(
+    `/api/public/publishers/${article.authorId}`,
+  );
 
   const excerpt = article.excerpt || excerptFromHtml(article.content);
 
@@ -141,8 +142,9 @@ export default async function ArticlePage({
   }
 
   const [profileData, relatedData, seriesData] = await Promise.all([
-    apiFetchSafe<{ profile: Profile | null }>("/api/public/profile"),
-
+    apiFetchSafe<{ profile: Profile | null }>(
+      `/api/public/publishers/${article.authorId}`,
+    ),
     apiFetchSafe<{ items: ArticleSummary[] }>(
       `/api/public/articles?excludeId=${article.id}&limit=3`,
     ),
