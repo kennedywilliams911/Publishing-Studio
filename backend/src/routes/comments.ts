@@ -170,9 +170,7 @@ router.get("/article/:id", requireAuth, async (req, res) => {
       where: {
         articleId: req.params.id,
         approved: true,
-        ...(req.session?.role === "SUPER_ADMIN"
-          ? {}
-          : { article: { authorId: req.userId } }),
+        article: { authorId: req.userId },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -193,10 +191,7 @@ router.get("/", requireAuth, async (req, res) => {
       50,
     );
 
-    let where: any =
-      req.session?.role === "SUPER_ADMIN"
-        ? {}
-        : { article: { authorId: req.userId } };
+    let where: any = { article: { authorId: req.userId } };
 
     if (status === "pending") {
       where.approved = false;
@@ -256,9 +251,7 @@ router.patch("/:id", requireAuth, async (req, res) => {
     const ownedComment = await prisma.comment.findFirst({
       where: {
         id,
-        ...(req.session?.role === "SUPER_ADMIN"
-          ? {}
-          : { article: { authorId: req.userId } }),
+        article: { authorId: req.userId },
       },
       select: { id: true },
     });
@@ -295,9 +288,7 @@ router.delete("/:id", requireAuth, async (req, res) => {
     const ownedComment = await prisma.comment.findFirst({
       where: {
         id,
-        ...(req.session?.role === "SUPER_ADMIN"
-          ? {}
-          : { article: { authorId: req.userId } }),
+        article: { authorId: req.userId },
       },
       select: { id: true },
     });
