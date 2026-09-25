@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
 import { apiFetchSafe } from "@/lib/api";
+import { PUBLIC_CONTENT_FETCH_OPTIONS } from "@/lib/cache-tags";
 
 import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
@@ -39,6 +40,7 @@ async function getArticle(slug: string) {
   // that isn't published), so a successful response here is safe to render.
   const data = await apiFetchSafe<{ article: ArticleFull }>(
     `/api/public/articles/${slug}`,
+    PUBLIC_CONTENT_FETCH_OPTIONS,
   );
 
   return data?.article ?? null;
@@ -61,6 +63,7 @@ export async function generateMetadata({
 
   const profileData = await apiFetchSafe<{ profile: Profile | null }>(
     `/api/public/publishers/${article.authorId}`,
+    PUBLIC_CONTENT_FETCH_OPTIONS,
   );
 
   const excerpt = article.excerpt || excerptFromHtml(article.content);
@@ -138,9 +141,11 @@ export default async function ArticlePage({
   const [profileData, relatedData, seriesData] = await Promise.all([
     apiFetchSafe<{ profile: Profile | null }>(
       `/api/public/publishers/${article.authorId}`,
+      PUBLIC_CONTENT_FETCH_OPTIONS,
     ),
     apiFetchSafe<{ items: ArticleSummary[] }>(
       `/api/public/publishers/${article.authorId}/articles`,
+      PUBLIC_CONTENT_FETCH_OPTIONS,
     ),
 
     article.series?.slug
@@ -151,7 +156,10 @@ export default async function ArticlePage({
             slug: string;
             title: string;
           }[];
-        }>(`/api/public/series/${article.series.slug}`)
+        }>(
+          `/api/public/series/${article.series.slug}`,
+          PUBLIC_CONTENT_FETCH_OPTIONS,
+        )
       : Promise.resolve(null),
   ]);
 

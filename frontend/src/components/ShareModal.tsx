@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Link2, Mail, Share2, Check } from "lucide-react";
@@ -17,6 +17,13 @@ type Platform =
   | "EMAIL"
   | "COPY_LINK"
   | "NATIVE";
+
+const subscribeToNothing = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+const getNativeShareSnapshot = () =>
+  typeof navigator !== "undefined" && typeof navigator.share === "function";
+const getServerNativeShareSnapshot = () => false;
 
 function buildShareText(title: string, url: string, author?: string) {
   return `✨ New Article\n\n${title}${author ? `\nBy ${author}:` : ""}\n\nRead the full article:\n${url}`;
@@ -102,24 +109,27 @@ export default function ShareModal({
   url,
   author,
   trigger,
+  initialOpen = false,
 }: {
   articleId: string;
   title: string;
   url: string;
   author?: string;
   trigger?: React.ReactNode;
+  initialOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [copied, setCopied] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [canNativeShare, setCanNativeShare] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    setCanNativeShare(
-      typeof navigator !== "undefined" && typeof navigator.share === "function",
-    );
-  }, []);
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
+  const canNativeShare = useSyncExternalStore(
+    subscribeToNothing,
+    getNativeShareSnapshot,
+    getServerNativeShareSnapshot,
+  );
 
   const handleCopy = useCallback(async () => {
     try {

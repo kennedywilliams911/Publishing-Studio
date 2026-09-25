@@ -1,11 +1,8 @@
-"use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, FileText, Headphones } from "lucide-react";
 import { formatDate, excerptFromHtml } from "@/lib/utils";
-import ShareModal from "@/components/ShareModal";
+import ArticleCardShare from "@/components/public/ArticleCardShare";
 import { watermarkImageUrl } from "@/lib/watermark";
 import type { ArticleSummary } from "@/types/article";
 
@@ -19,7 +16,6 @@ export default function ArticleCard({
   watermarkTransform?: string | null;
   basePath?: string;
 }) {
-  const router = useRouter();
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     (typeof window !== "undefined" ? window.location.origin : "");
@@ -30,21 +26,7 @@ export default function ArticleCard({
   );
 
   return (
-    <div
-      role="link"
-      tabIndex={0}
-      onClick={(event) => {
-        if ((event.target as HTMLElement).closest("a, button")) return;
-        router.push(`${basePath}/${article.slug}`);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          router.push(`${basePath}/${article.slug}`);
-        }
-      }}
-      className="paper-lift flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-parchment-300 bg-white dark:border-ink-800 dark:bg-ink-900"
-    >
+    <article className="paper-lift flex flex-col overflow-hidden rounded-2xl border border-parchment-300 bg-white dark:border-ink-800 dark:bg-ink-900">
       <Link
         href={`${basePath}/${article.slug}`}
         className="relative aspect-[16/10] w-full overflow-hidden bg-parchment-200 dark:bg-ink-800"
@@ -94,18 +76,13 @@ export default function ArticleCard({
           >
             Read Article <ArrowRight size={14} />
           </Link>
-          <ShareModal
+          <ArticleCardShare
             articleId={article.id}
             title={article.title}
             url={publicUrl}
-            trigger={
-              <button className="text-xs font-medium text-ink-400 hover:text-ink-700 dark:text-parchment-400 dark:hover:text-parchment-100">
-                Share
-              </button>
-            }
           />
         </div>
       </div>
-    </div>
+    </article>
   );
 }

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { apiFetchSafe } from "@/lib/api";
+import { PUBLIC_CONTENT_FETCH_OPTIONS } from "@/lib/cache-tags";
 import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
 import ArticleCard from "@/components/public/ArticleCard";
@@ -11,8 +12,6 @@ import { buildWatermarkTransform } from "@/lib/watermark";
 import type { ArticleSummary } from "@/types/article";
 import type { Profile } from "@/types/profile";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata({
   params,
 }: {
@@ -21,6 +20,7 @@ export async function generateMetadata({
   const { userId } = await params;
   const data = await apiFetchSafe<{ profile: Profile | null }>(
     `/api/public/publishers/${userId}`,
+    PUBLIC_CONTENT_FETCH_OPTIONS,
   );
   return {
     title: {
@@ -64,6 +64,7 @@ export default async function PublisherArticlesPage({
   }).toString();
   const data = await apiFetchSafe<PublisherArticlesResponse>(
     `/api/public/publishers/${userId}/articles?${queryString}`,
+    PUBLIC_CONTENT_FETCH_OPTIONS,
   );
   if (!data) notFound();
 

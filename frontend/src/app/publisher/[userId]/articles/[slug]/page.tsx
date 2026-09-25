@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { apiFetchSafe } from "@/lib/api";
+import { PUBLIC_CONTENT_FETCH_OPTIONS } from "@/lib/cache-tags";
 import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
 import CommentsSection from "@/components/public/CommentsSection";
@@ -16,13 +17,12 @@ import {
 import type { ArticleFull } from "@/types/article";
 import type { Profile } from "@/types/profile";
 
-export const dynamic = "force-dynamic";
-
 type Response = { article: ArticleFull; profile: Profile | null };
 
 async function getPublisherArticle(userId: string, slug: string) {
   return apiFetchSafe<Response>(
     `/api/public/publishers/${userId}/articles/${slug}`,
+    PUBLIC_CONTENT_FETCH_OPTIONS,
   );
 }
 

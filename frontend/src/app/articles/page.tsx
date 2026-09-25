@@ -6,13 +6,12 @@ import TagFilter from "@/components/public/TagFilter";
 import SeriesFilter from "@/components/public/SeriesFilter";
 import Pagination from "@/components/admin/Pagination";
 import { Search } from "lucide-react";
+import { PUBLIC_CONTENT_CACHE_TAG } from "@/lib/cache-tags";
 import { buildWatermarkTransform } from "@/lib/watermark";
 import type { ArticleSummary } from "@/types/article";
 import type { Profile } from "@/types/profile";
 
 export const metadata = { title: "Articles" };
-export const dynamic = "force-dynamic";
-
 type PublicSeries = {
   id: string;
   title: string;
@@ -37,22 +36,25 @@ export default async function ArticlesBrowsePage({
   if (selectedSeries) params.set("series", selectedSeries);
   params.set("page", String(page));
 
-  const [profileData, articlesData, tagsData, seriesData] = await Promise.all([
-    apiFetchSafe<{ profile: Profile | null }>("/api/public/profile"),
-    apiFetchSafe<{ items: ArticleSummary[]; totalPages: number }>(
-      `/api/public/articles?${params.toString()}`,
-    ),
-    apiFetchSafe<{ tags: ArticleSummary["tags"] }>("/api/public/tags"),
-    apiFetchSafe<{ series: PublicSeries[] }>("/api/public/series"),
-  ]);
+  const browseData = await apiFetchSafe<{
+    profile: Profile | null;
+    items: ArticleSummary[];
+    totalPages: number;
+    tags: ArticleSummary["tags"];
+    series: PublicSeries[];
+  }>(`/api/public/browse/articles?${params.toString()}`, {
+    revalidate: 60,
+    tags: [PUBLIC_CONTENT_CACHE_TAG],
+    forwardCookies: false,
+  });
 
-  const profile = profileData?.profile ?? null;
+  const profile = browseData?.profile ?? null;
   const siteName =
     profile?.churchName || profile?.pastorName || "Publishing Studio";
-  const items = articlesData?.items ?? [];
-  const totalPages = articlesData?.totalPages ?? 1;
-  const tags = tagsData?.tags ?? [];
-  const series = seriesData?.series ?? [];
+  const items = browseData?.items ?? [];
+  const totalPages = browseData?.totalPages ?? 1;
+  const tags = browseData?.tags ?? [];
+  const series = browseData?.series ?? [];
   const watermarkTransform = buildWatermarkTransform(profile);
 
   return (

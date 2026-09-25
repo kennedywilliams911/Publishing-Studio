@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
+import { PUBLIC_CONTENT_CACHE_TAG } from "@/lib/cache-tags";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -49,6 +51,14 @@ async function proxy(request: NextRequest) {
   }
 
   const responseBody = await backendResponse.arrayBuffer();
+
+  if (
+    backendResponse.ok &&
+    request.method !== "GET" &&
+    /^\/api\/admin\/(articles|profile|series)(\/|$)/.test(path)
+  ) {
+    revalidateTag(PUBLIC_CONTENT_CACHE_TAG, { expire: 0 });
+  }
 
   const responseHeaders = new Headers();
 

@@ -233,6 +233,87 @@ router.get("/articles", async (req, res) => {
   res.json({ items });
 });
 
+// GET /api/public/browse/articles
+// Combined payload for the public articles page.
+router.get("/browse/articles", async (req, res) => {
+  const publisherId = await getDefaultPublisherId();
+  if (!publisherId) {
+    return res.json({
+      profile: null,
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: PAGE_SIZE,
+      totalPages: 1,
+      tags: [],
+      series: [],
+    });
+  }
+
+  const q = typeof req.query.q === "string" ? req.query.q.trim() : undefined;
+  const tag =
+    typeof req.query.tag === "string" ? req.query.tag.trim() : undefined;
+  const seriesSlug =
+    typeof req.query.series === "string" ? req.query.series.trim() : undefined;
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const where: Prisma.ArticleWhereInput = {
+    authorId: publisherId,
+    status: "PUBLISHED",
+    ...(tag ? { tags: { some: { tag: { slug: tag } } } } : {}),
+    ...(seriesSlug ? { series: { slug: seriesSlug } } : {}),
+    ...(q
+      ? {
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { content: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const [profile, items, total, tags, seriesItems] = await Promise.all([
+    prisma.profile.findUnique({ where: { userId: publisherId } }),
+    prisma.article.findMany({
+      where,
+      orderBy: { publishedAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.article.count({ where }),
+    prisma.tag.findMany({
+      where: {
+        articles: {
+          some: {
+            article: { authorId: publisherId, status: "PUBLISHED" },
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, slug: true },
+    }),
+    prisma.series.findMany({
+      where: {
+        authorId: publisherId,
+        articles: { some: { status: "PUBLISHED" } },
+      },
+      orderBy: { title: "asc" },
+      select: { id: true, title: true, slug: true, description: true },
+    }),
+  ]);
+
+  res.json({
+    userId: publisherId,
+    profile,
+    items,
+    total,
+    page,
+    pageSize: PAGE_SIZE,
+    totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    tags,
+    series: seriesItems,
+  });
+});
+
 // GET /api/public/articles/:slug — draft protection: never exposes a draft
 // or a nonexistent article, regardless of who is asking.
 router.get("/articles/:slug", async (req, res) => {

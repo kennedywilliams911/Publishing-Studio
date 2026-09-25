@@ -14,6 +14,9 @@ type FetchOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   cache?: RequestCache;
+  revalidate?: number;
+  tags?: string[];
+  forwardCookies?: boolean;
 };
 
 async function getForwardedCookieHeader(): Promise<string | undefined> {
@@ -48,18 +51,29 @@ export async function apiFetch<T = unknown>(
     "Content-Type": "application/json",
   };
 
-  const cookieHeader = await getForwardedCookieHeader();
+  const cookieHeader =
+    options.forwardCookies === false
+      ? undefined
+      : await getForwardedCookieHeader();
   if (cookieHeader) headers["Cookie"] = cookieHeader;
 
-  // Public article lists must reflect newly published content immediately.
   const defaultCache: RequestCache = "no-store";
+  const cacheOptions =
+    options.revalidate === undefined
+      ? { cache: options.cache ?? defaultCache }
+      : {
+          next: {
+            revalidate: options.revalidate,
+            ...(options.tags ? { tags: options.tags } : {}),
+          },
+        };
 
   const res = await fetch(`${API_URL}${path}`, {
     method: options.method || "GET",
     headers,
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
     credentials: "include",
-    cache: options.cache ?? defaultCache,
+    ...cacheOptions,
   });
 
   const data = await res.json().catch(() => ({}));
