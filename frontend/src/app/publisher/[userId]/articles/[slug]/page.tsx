@@ -5,6 +5,7 @@ import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
 import CommentsSection from "@/components/public/CommentsSection";
 import ArticleTranslation from "@/components/public/ArticleTranslation";
+import ViewCounter from "@/components/public/ViewCounter";
 import { excerptFromHtml } from "@/lib/utils";
 import {
   buildWatermarkTransform,
@@ -126,6 +127,12 @@ export default async function PublisherArticlePage({
               watermark={profile}
               translatorTargetId="publisher-article-translator"
             />
+            <div className="mx-auto max-w-2xl px-4 pb-4 md:px-0">
+              <ViewCounter
+                articleId={article.id}
+                viewCount={article.viewCount ?? 0}
+              />
+            </div>
             <div className="mx-auto max-w-2xl px-4 pb-12 md:px-0">
               <CommentsSection
                 articleId={article.id}

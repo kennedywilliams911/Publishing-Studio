@@ -9,6 +9,7 @@ import PublicHeader from "@/components/public/Header";
 import PublicFooter from "@/components/public/Footer";
 import ArticleCard from "@/components/public/ArticleCard";
 import ArticleTranslation from "@/components/public/ArticleTranslation";
+import ViewCounter from "@/components/public/ViewCounter";
 import CommentsSection from "@/components/public/CommentsSection";
 import SeriesNavigation from "@/components/public/SeriesNavigation";
 
@@ -255,6 +256,13 @@ export default async function ArticlePage({
             series={article.series ?? article.seriesInfo}
             watermark={profile}
           />
+
+          <div className="mx-auto -mt-4 mb-6 flex max-w-3xl justify-center px-4">
+            <ViewCounter
+              articleId={article.id}
+              viewCount={article.viewCount ?? 0}
+            />
+          </div>
 
           <div className="mx-auto -mt-4 mb-14 flex max-w-3xl justify-center px-4">
             <Suspense

@@ -6,41 +6,37 @@ import { hashIP, getClientIP, parsePagination } from "../lib/helpers";
 const router = Router();
 
 // POST /api/public/articles/:id/views
-// Track article view (fire-and-forget)
+// Track article view
 router.post("/:id/views", async (req, res) => {
-  // Return immediately (fire-and-forget)
-  res.json({ success: true });
-
-  // Process view tracking asynchronously
   try {
     const { id } = req.params;
 
-    // Verify article exists
     const article = await prisma.article.findUnique({ where: { id } });
-    if (!article) return;
+    if (!article) return res.status(404).json({ error: "Article not found" });
 
     // Get client IP and hash it
     const clientIP = getClientIP(req);
     const ipHash = hashIP(clientIP);
     const userAgent = req.headers["user-agent"] || undefined;
 
-    // Create view record
-    await prisma.articleView.create({
-      data: {
-        articleId: id,
-        ipHash,
-        userAgent,
-      },
-    });
+    await prisma.$transaction([
+      prisma.articleView.create({
+        data: {
+          articleId: id,
+          ipHash,
+          userAgent,
+        },
+      }),
+      prisma.article.update({
+        where: { id },
+        data: { viewCount: { increment: 1 } },
+      }),
+    ]);
 
-    // Update view count
-    await prisma.article.update({
-      where: { id },
-      data: { viewCount: { increment: 1 } },
-    });
+    res.json({ success: true });
   } catch (error) {
     console.error("Error tracking view:", error);
-    // Silently fail - don't affect user experience
+    res.status(500).json({ error: "Failed to track view" });
   }
 });
 
