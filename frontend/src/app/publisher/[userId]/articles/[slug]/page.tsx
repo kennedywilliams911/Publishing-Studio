@@ -44,7 +44,8 @@ export async function generateMetadata({
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const sourceImage =
     article.featuredImage || profile?.profileImage || `${appUrl}/open-book.svg`;
-  const previewImage = buildShareImageUrl(sourceImage, transform);
+  const previewImage =
+    buildShareImageUrl(sourceImage, transform) ?? sourceImage;
   const url = `${appUrl}/articles/${article.slug}`;
 
   return {

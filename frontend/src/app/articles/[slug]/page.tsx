@@ -80,7 +80,8 @@ export async function generateMetadata({
   const sourceImage =
     article.featuredImage || profile?.profileImage || `${appUrl}/open-book.svg`;
 
-  const previewImage = buildShareImageUrl(sourceImage, transform);
+  const previewImage =
+    buildShareImageUrl(sourceImage, transform) ?? sourceImage;
 
   return {
     title: article.title,
