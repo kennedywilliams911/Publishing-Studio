@@ -38,30 +38,41 @@ async function getAnalyticsSummary(req: any, res: any) {
       where: {
         authorId: req.userId,
         status: "PUBLISHED",
-        publishedAt: { gte: startDate },
       },
       select: {
         id: true,
         title: true,
-        viewCount: true,
         publishedAt: true,
+        _count: {
+          select: {
+            views: { where: { viewedAt: { gte: startDate } } },
+          },
+        },
       },
-      orderBy: { viewCount: "desc" },
-      take: 10,
     });
 
     const totalViews = articles.reduce(
-      (sum, article) => sum + article.viewCount,
+      (sum, article) => sum + article._count.views,
       0,
     );
     const averageViewsPerArticle =
       articles.length > 0 ? Math.round(totalViews / articles.length) : 0;
 
+    const topArticles = articles
+      .map((article) => ({
+        id: article.id,
+        title: article.title,
+        viewCount: article._count.views,
+        publishedAt: article.publishedAt,
+      }))
+      .sort((a, b) => b.viewCount - a.viewCount)
+      .slice(0, 10);
+
     res.json({
       period: period || "month",
       totalViews,
       averageViewsPerArticle,
-      articles,
+      articles: topArticles,
     });
   } catch (error) {
     console.error("Error fetching analytics:", error);
