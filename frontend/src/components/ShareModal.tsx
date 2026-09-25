@@ -19,7 +19,7 @@ type Platform =
   | "NATIVE";
 
 function buildShareText(title: string, url: string, author?: string) {
-  return `✨ New Article\n\n${title}${author ? `\nBy ${author}` : ""}\n\nRead the full article:\n${url}`;
+  return `✨ New Article\n\n${title}${author ? `\nBy ${author}:` : ""}\n\nRead the full article:\n${url}`;
 }
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
