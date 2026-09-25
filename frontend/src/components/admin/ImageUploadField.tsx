@@ -43,7 +43,9 @@ export default function ImageUploadField({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("folder", folder);
-        const res = await fetch(apiUrl("/api/admin/upload"), {
+        const uploadEndpoint =
+          folder === "watermark" ? "/api/upload" : "/api/admin/upload";
+        const res = await fetch(apiUrl(uploadEndpoint), {
           method: "POST",
           credentials: "include",
           body: formData,
