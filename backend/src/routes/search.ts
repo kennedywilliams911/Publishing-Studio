@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { generateSlug, parsePagination } from "../lib/helpers";
+import { getDefaultPublisherId } from "../lib/public-tenant";
 import { requireAuth } from "../middleware/requireAuth";
 import { z } from "zod";
 
@@ -10,7 +11,14 @@ const router = Router();
 // List all available tags
 router.get("/tags", async (req, res) => {
   try {
+    const publisherId = await getDefaultPublisherId();
+    if (!publisherId) return res.json({ tags: [] });
     const tags = await prisma.tag.findMany({
+      where: {
+        articles: {
+          some: { article: { authorId: publisherId, status: "PUBLISHED" } },
+        },
+      },
       select: {
         id: true,
         name: true,
@@ -30,6 +38,8 @@ router.get("/tags", async (req, res) => {
 // Search and filter articles with full-text search
 router.get("/articles", async (req, res) => {
   try {
+    const publisherId = await getDefaultPublisherId();
+    if (!publisherId) return res.json({ items: [], total: 0 });
     const { q, tag, limit, offset } = req.query;
     const { limit: parsedLimit, offset: parsedOffset } = parsePagination(
       typeof limit === "string" ? limit : undefined,
@@ -37,6 +47,7 @@ router.get("/articles", async (req, res) => {
     );
 
     let where: any = {
+      authorId: publisherId,
       status: "PUBLISHED",
       publishedAt: { not: null },
     };

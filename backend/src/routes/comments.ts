@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
+import { getSessionFromRequest } from "../lib/auth";
 import { requireAuth } from "../middleware/requireAuth";
 import {
   sanitizeContent,
@@ -102,20 +103,20 @@ router.get("/:id/comments", async (req, res) => {
       20,
     );
 
-    // Check if user is authenticated
-    const isAdmin =
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer ");
-
     // Verify article exists
     const article = await prisma.article.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, authorId: true },
     });
 
     if (!article) {
       return res.status(404).json({ error: "Article not found" });
     }
+
+    const session = await getSessionFromRequest(req);
+    const isAdmin =
+      !!session &&
+      (session.role === "SUPER_ADMIN" || session.userId === article.authorId);
 
     if (isAdmin) {
       // Admin: get all comments

@@ -13,10 +13,16 @@ router.get("/:id/versions", requireAuth, async (req, res) => {
     // Verify article exists
     const article = await prisma.article.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, authorId: true },
     });
 
     if (!article) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+    if (
+      req.session?.role !== "SUPER_ADMIN" &&
+      article.authorId !== req.userId
+    ) {
       return res.status(404).json({ error: "Article not found" });
     }
 
@@ -65,10 +71,22 @@ router.post(
       // Verify article exists
       const article = await prisma.article.findUnique({
         where: { id },
-        select: { id: true, title: true, content: true, excerpt: true },
+        select: {
+          id: true,
+          authorId: true,
+          title: true,
+          content: true,
+          excerpt: true,
+        },
       });
 
       if (!article) {
+        return res.status(404).json({ error: "Article not found" });
+      }
+      if (
+        req.session?.role !== "SUPER_ADMIN" &&
+        article.authorId !== req.userId
+      ) {
         return res.status(404).json({ error: "Article not found" });
       }
 
@@ -77,7 +95,7 @@ router.post(
         where: { id: versionId },
       });
 
-      if (!version) {
+      if (!version || version.articleId !== id) {
         return res.status(404).json({ error: "Version not found" });
       }
 

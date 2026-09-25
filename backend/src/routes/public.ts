@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
+import { getDefaultPublisherId } from "../lib/public-tenant";
 import type { Prisma } from "@prisma/client";
 
 const router = Router();
@@ -12,8 +13,15 @@ router.use((_req, res, next) => {
 
 // GET /api/public/tags
 router.get("/tags", async (_req, res) => {
+  const publisherId = await getDefaultPublisherId();
+  if (!publisherId) return res.json({ tags: [] });
+
   const tags = await prisma.tag.findMany({
-    where: { articles: { some: { article: { status: "PUBLISHED" } } } },
+    where: {
+      articles: {
+        some: { article: { authorId: publisherId, status: "PUBLISHED" } },
+      },
+    },
     orderBy: { name: "asc" },
   });
   res.json({ tags });
@@ -21,8 +29,12 @@ router.get("/tags", async (_req, res) => {
 
 // GET /api/public/series
 router.get("/series", async (_req, res) => {
+  const publisherId = await getDefaultPublisherId();
+
   const series = await prisma.series.findMany({
-    where: { articles: { some: { status: "PUBLISHED" } } },
+    where: publisherId
+      ? { authorId: publisherId, articles: { some: { status: "PUBLISHED" } } }
+      : { id: "__no_public_publisher__" },
     select: { id: true, title: true, slug: true, description: true },
     orderBy: { title: "asc" },
   });
@@ -32,6 +44,7 @@ router.get("/series", async (_req, res) => {
 // GET /api/public/profile
 router.get("/profile", async (_req, res) => {
   const profile = await prisma.profile.findFirst({
+    where: { user: { status: "ACTIVE" } },
     orderBy: { createdAt: "asc" },
   });
   res.json({ profile });
@@ -156,6 +169,17 @@ router.get("/publishers/:userId/articles/:slug", async (req, res) => {
 //   ?q=&page=1                      -> paginated + searchable (browse page)
 //   ?excludeId=&limit=3             -> latest N excluding one article (related)
 router.get("/articles", async (req, res) => {
+  const publisherId = await getDefaultPublisherId();
+  if (!publisherId) {
+    return res.json({
+      items: [],
+      total: 0,
+      ...(req.query.page
+        ? { page: 1, pageSize: PAGE_SIZE, totalPages: 1 }
+        : {}),
+    });
+  }
+
   const q = typeof req.query.q === "string" ? req.query.q.trim() : undefined;
   const excludeId =
     typeof req.query.excludeId === "string" ? req.query.excludeId : undefined;
@@ -167,6 +191,7 @@ router.get("/articles", async (req, res) => {
   const page = req.query.page ? Math.max(1, Number(req.query.page)) : undefined;
 
   const where: Prisma.ArticleWhereInput = {
+    authorId: publisherId,
     status: "PUBLISHED",
     ...(excludeId ? { id: { not: excludeId } } : {}),
     ...(tag ? { tags: { some: { tag: { slug: tag } } } } : {}),
@@ -228,8 +253,11 @@ router.get("/articles/:slug", async (req, res) => {
 
 // GET /api/public/sitemap — every published slug + last-modified date, for sitemap.xml
 router.get("/sitemap", async (_req, res) => {
+  const publisherId = await getDefaultPublisherId();
+  if (!publisherId) return res.json({ items: [] });
+
   const items = await prisma.article.findMany({
-    where: { status: "PUBLISHED" },
+    where: { authorId: publisherId, status: "PUBLISHED" },
     select: { slug: true, updatedAt: true },
     orderBy: { publishedAt: "desc" },
   });

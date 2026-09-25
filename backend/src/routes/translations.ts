@@ -436,10 +436,16 @@ router.get("/articles/:id/translations", requireAuth, async (req, res) => {
     // Verify article exists
     const article = await prisma.article.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, authorId: true },
     });
 
     if (!article) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+    if (
+      req.session?.role !== "SUPER_ADMIN" &&
+      article.authorId !== req.userId
+    ) {
       return res.status(404).json({ error: "Article not found" });
     }
 
@@ -488,10 +494,16 @@ router.post(
       // Get article
       const article = await prisma.article.findUnique({
         where: { id },
-        select: { title: true, content: true },
+        select: { title: true, content: true, authorId: true },
       });
 
       if (!article) {
+        return res.status(404).json({ error: "Article not found" });
+      }
+      if (
+        req.session?.role !== "SUPER_ADMIN" &&
+        article.authorId !== req.userId
+      ) {
         return res.status(404).json({ error: "Article not found" });
       }
 
