@@ -25,13 +25,24 @@ const VALID_NEWSLETTER_FREQUENCIES = [
 router.post("/subscribe", async (req, res) => {
   try {
     const { email } = req.body;
+    const requestedUserId =
+      typeof req.body?.userId === "string" ? req.body.userId : "";
 
     if (!email || !isValidEmail(email)) {
       return res.status(400).json({ error: "Invalid email address" });
     }
+    const defaultProfile = requestedUserId
+      ? null
+      : await prisma.profile.findFirst({
+          orderBy: { createdAt: "asc" },
+          select: { userId: true },
+        });
+    const userId = requestedUserId || defaultProfile?.userId || "";
+    if (!userId)
+      return res.status(400).json({ error: "Publisher is required" });
 
     // Rate limit check (1 per email per 5 minutes)
-    const rateLimitKey = `newsletter-subscribe-${email}`;
+    const rateLimitKey = `newsletter-subscribe-${userId}-${email}`;
     if (!checkRateLimit(rateLimitKey, 1, 5 * 60 * 1000)) {
       return res
         .status(429)
@@ -40,7 +51,7 @@ router.post("/subscribe", async (req, res) => {
 
     // Check if already subscribed
     const existing = await prisma.newsletterSubscriber.findUnique({
-      where: { email },
+      where: { userId_email: { userId, email } },
     });
 
     if (existing && !existing.unsubscribedAt) {
@@ -52,7 +63,7 @@ router.post("/subscribe", async (req, res) => {
     // Auto-confirm newsletter signups so users are subscribed immediately.
     if (existing && existing.unsubscribedAt) {
       await prisma.newsletterSubscriber.update({
-        where: { email },
+        where: { id: existing.id },
         data: {
           unsubscribedAt: null,
           unsubscribeToken: token,
@@ -64,6 +75,7 @@ router.post("/subscribe", async (req, res) => {
       await prisma.newsletterSubscriber.create({
         data: {
           email,
+          userId,
           unsubscribeToken: token,
           verified: true,
           verifiedAt: new Date(),
@@ -102,20 +114,20 @@ async function unsubscribeNewsletter(req: any, res: any) {
       return res.status(400).json({ error: "Invalid email address" });
     }
 
-    const subscriber = await prisma.newsletterSubscriber.findUnique({
-      where: { email },
+    const subscriber = await prisma.newsletterSubscriber.findFirst({
+      where: { email, unsubscribeToken: token },
     });
 
     if (!subscriber) {
       return res.status(404).json({ error: "Subscriber not found" });
     }
 
-    if (!token || subscriber.unsubscribeToken !== token) {
+    if (!subscriber) {
       return res.status(401).json({ error: "Invalid unsubscribe token" });
     }
 
     await prisma.newsletterSubscriber.update({
-      where: { email },
+      where: { id: subscriber.id },
       data: { unsubscribedAt: new Date() },
     });
 
@@ -140,15 +152,15 @@ router.get("/confirm", async (req, res) => {
     return res.status(400).json({ error: "Invalid confirmation link." });
   }
 
-  const subscriber = await prisma.newsletterSubscriber.findUnique({
-    where: { email },
+  const subscriber = await prisma.newsletterSubscriber.findFirst({
+    where: { email, unsubscribeToken: token },
   });
-  if (!subscriber || subscriber.unsubscribeToken !== token) {
+  if (!subscriber) {
     return res.status(401).json({ error: "Invalid confirmation link." });
   }
 
   await prisma.newsletterSubscriber.update({
-    where: { email },
+    where: { id: subscriber.id },
     data: { verified: true, verifiedAt: new Date(), unsubscribedAt: null },
   });
 
@@ -169,12 +181,12 @@ router.get("/subscribers", requireAuth, async (req, res) => {
       50,
     );
 
-    let where: any = {};
+    let where: any = { userId: req.session!.userId };
 
     if (status === "active") {
-      where = { unsubscribedAt: null, verified: true };
+      where = { ...where, unsubscribedAt: null, verified: true };
     } else if (status === "unsubscribed") {
-      where.unsubscribedAt = { not: null };
+      where = { ...where, unsubscribedAt: { not: null } };
     }
 
     const [subscribers, active, unsubscribed, total] = await Promise.all([
@@ -296,16 +308,25 @@ router.post("/send", requireAuth, async (req, res) => {
       });
     }
 
-    const subscribers = await prisma.newsletterSubscriber.findMany({
-      where: { unsubscribedAt: null, verified: true },
-      select: { email: true, unsubscribeToken: true },
-    });
-
-    if (subscribers.length === 0) {
-      return res.status(400).json({ error: "No active subscribers to notify" });
-    }
+    let subscribersCount = 0;
 
     for (const article of unsentArticles) {
+      const subscribers = await prisma.newsletterSubscriber.findMany({
+        where: {
+          userId: article.authorId,
+          unsubscribedAt: null,
+          verified: true,
+        },
+        select: { email: true, unsubscribeToken: true },
+      });
+
+      if (subscribers.length === 0) {
+        return res.status(400).json({
+          error: `No active subscribers for ${article.title}`,
+        });
+      }
+      subscribersCount += subscribers.length;
+
       const articleAuthor = await prisma.user.findUnique({
         where: { id: article.authorId },
         select: {
@@ -354,8 +375,8 @@ router.post("/send", requireAuth, async (req, res) => {
 
     res.json({
       success: true,
-      message: `Newsletter sent to ${subscribers.length} subscribers`,
-      subscribersCount: subscribers.length,
+      message: `Newsletter sent to ${subscribersCount} recipients`,
+      subscribersCount,
       articleCount: unsentArticles.length,
       skippedArticleCount: articles.length - unsentArticles.length,
       frequency,
@@ -391,8 +412,8 @@ router.delete("/subscribers/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    await prisma.newsletterSubscriber.delete({
-      where: { id },
+    await prisma.newsletterSubscriber.deleteMany({
+      where: { id, userId: req.session!.userId },
     });
 
     res.json({ success: true, message: "Subscriber deleted" });

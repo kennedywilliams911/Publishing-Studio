@@ -23,7 +23,11 @@ export async function notifySubscribersOfPublishedArticle(article: {
 
   const [subscribers, articleAuthor] = await Promise.all([
     prisma.newsletterSubscriber.findMany({
-      where: { unsubscribedAt: null, verified: true },
+      where: {
+        userId: article.authorId,
+        unsubscribedAt: null,
+        verified: true,
+      },
       select: { email: true, unsubscribeToken: true },
     }),
     prisma.user.findUnique({

@@ -7,8 +7,10 @@ import { apiUrl } from "@/lib/api-client";
 
 export default function NewsletterForm({
   churchName = "Publishing Studio",
+  publisherId,
 }: {
   churchName?: string;
+  publisherId?: string;
 }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export default function NewsletterForm({
       const res = await fetch(apiUrl("/api/newsletter/subscribe"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, userId: publisherId }),
       });
 
       if (!res.ok) {

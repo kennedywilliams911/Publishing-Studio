@@ -21,10 +21,12 @@ export default function PublicFooter({
   siteName,
   churchName,
   socialLinks,
+  publisherId,
 }: {
   siteName: string;
   churchName?: string | null;
   socialLinks?: SocialLinks | null;
+  publisherId?: string;
 }) {
   const year = new Date().getFullYear();
 
@@ -32,7 +34,10 @@ export default function PublicFooter({
     <footer className="border-t border-parchment-300 bg-parchment-100 dark:border-ink-800 dark:bg-ink-950">
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <div className="mx-auto mb-8 max-w-xl rounded-2xl border border-parchment-300 bg-white p-5 dark:border-ink-800 dark:bg-ink-900">
-          <NewsletterForm churchName={churchName ?? siteName} />
+          <NewsletterForm
+            churchName={churchName ?? siteName}
+            publisherId={publisherId}
+          />
         </div>
 
         <div className="text-center">

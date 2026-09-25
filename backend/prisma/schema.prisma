@@ -175,16 +175,16 @@ model ArticleView {
 
 model NewsletterSubscriber {
   id               String    @id @default(cuid())
-  email            String    @unique
+  email            String
   subscribedAt     DateTime  @default(now())
   unsubscribedAt   DateTime?
   unsubscribeToken String    @unique @default(cuid())
   verified         Boolean   @default(false)
   verifiedAt       DateTime?
-  userId            String?
-  user             User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([email])
+  @@unique([userId, email])
   @@index([unsubscribedAt])
   @@index([userId])
   @@map("newsletter_subscribers")

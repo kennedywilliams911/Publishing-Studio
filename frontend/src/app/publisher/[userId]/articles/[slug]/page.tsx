@@ -141,6 +141,7 @@ export default async function PublisherArticlePage({
         siteName={siteName}
         churchName={profile?.churchName}
         socialLinks={profile?.socialLinks ?? {}}
+        publisherId={userId}
       />
     </div>
   );
