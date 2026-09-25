@@ -241,7 +241,7 @@ export default function ArticleEditorForm({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       if (dirtyRef.current) persist(undefined, { silent: true });
-    }, 500);
+    }, 60000);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
