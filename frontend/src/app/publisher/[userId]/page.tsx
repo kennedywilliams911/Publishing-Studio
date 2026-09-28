@@ -54,6 +54,7 @@ export default async function PublisherPage({
     <div className="flex min-h-screen flex-col">
       <PublicHeader
         siteName={siteName}
+        logoUrl={profile?.churchLogoUrl}
         homeHref={publisherPath}
         articlesHref={basePath}
       />

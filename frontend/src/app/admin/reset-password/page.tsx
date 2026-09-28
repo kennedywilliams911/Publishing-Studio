@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
 import { apiUrl } from "@/lib/api-client";
+import PasswordInput from "@/components/admin/PasswordInput";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -32,8 +33,7 @@ function ResetPasswordForm() {
       <h1 className="font-display text-2xl font-semibold text-ink-900 dark:text-parchment-50">
         Choose a new password
       </h1>
-      <input
-        type="password"
+      <PasswordInput
         required
         minLength={8}
         autoComplete="new-password"

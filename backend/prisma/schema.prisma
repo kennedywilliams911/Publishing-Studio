@@ -67,6 +67,7 @@ model Profile {
   bio                String?
   profileImage       String?
   churchName         String?
+  churchLogoUrl      String?
   contactEmail       String?
   socialLinks        Json?
   createdAt          DateTime @default(now())

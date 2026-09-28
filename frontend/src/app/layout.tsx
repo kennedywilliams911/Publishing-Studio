@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "sonner";
 import FaviconController from "@/components/FaviconController";
+import { getBrandProfile } from "@/lib/branding";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -30,21 +31,16 @@ const dmSans = DM_Sans({
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { apiFetchSafe } = await import("@/lib/api");
-  const { getCurrentSession } = await import("@/lib/auth");
-  const session = await getCurrentSession();
-  const data = await apiFetchSafe<{
-    profile: { churchName?: string; bio?: string } | null;
-  }>(session?.userId ? "/api/admin/profile" : "/api/public/profile");
-  const profile = data?.profile;
+  const profile = await getBrandProfile();
   const siteName = profile?.churchName?.trim() || "Publishing Studio";
+  const icon = profile?.churchLogoUrl || "/open-book.svg";
 
   return {
     metadataBase: new URL(appUrl),
     icons: {
-      icon: "/open-book.svg",
-      shortcut: "/open-book.svg",
-      apple: "/open-book.svg",
+      icon,
+      shortcut: icon,
+      apple: icon,
     },
     title: {
       default: siteName,
@@ -62,9 +58,11 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const profile = await getBrandProfile();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -76,7 +74,7 @@ export default function RootLayout({
           enableSystem={false}
         >
           {children}
-          <FaviconController />
+          <FaviconController organizationLogoUrl={profile?.churchLogoUrl} />
           <Toaster richColors position="top-center" theme="light" />
         </ThemeProvider>
       </body>

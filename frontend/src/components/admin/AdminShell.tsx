@@ -8,11 +8,15 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 export default function AdminShell({
   pastorName,
+  churchName,
+  churchLogoUrl,
   role,
   userId,
   children,
 }: {
   pastorName: string;
+  churchName?: string;
+  churchLogoUrl?: string | null;
   role?: "SUPER_ADMIN" | "ADMIN";
   userId?: string;
   children: React.ReactNode;
@@ -38,7 +42,13 @@ export default function AdminShell({
     <div className="flex min-h-screen bg-parchment-100 dark:bg-ink-950">
       <aside className="hidden w-64 shrink-0 md:block">
         <div className="sticky top-0 h-screen">
-          <AdminSidebar pastorName={pastorName} role={role} userId={userId} />
+          <AdminSidebar
+            pastorName={pastorName}
+            churchName={churchName}
+            churchLogoUrl={churchLogoUrl}
+            role={role}
+            userId={userId}
+          />
         </div>
       </aside>
 
@@ -61,6 +71,8 @@ export default function AdminShell({
             >
               <AdminSidebar
                 pastorName={pastorName}
+                churchName={churchName}
+                churchLogoUrl={churchLogoUrl}
                 role={role}
                 userId={userId}
                 onNavigate={() => setDrawerOpen(false)}

@@ -26,6 +26,7 @@ export default async function ProfilePage() {
           bio: profile?.bio ?? "",
           profileImage: profile?.profileImage ?? null,
           churchName: profile?.churchName ?? "",
+          churchLogoUrl: profile?.churchLogoUrl ?? null,
           contactEmail: profile?.contactEmail ?? "",
           socialLinks: profile?.socialLinks ?? {},
         }}

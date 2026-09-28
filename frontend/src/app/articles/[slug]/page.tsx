@@ -250,7 +250,7 @@ export default async function ArticlePage({
         }}
       />
 
-      <PublicHeader siteName={siteName} />
+      <PublicHeader siteName={siteName} logoUrl={profile?.churchLogoUrl} />
 
       <div className="w-full px-4 py-8 md:px-6">
         <div className="w-full">

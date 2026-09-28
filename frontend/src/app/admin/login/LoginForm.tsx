@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Lock, Mail } from "lucide-react";
 import { apiUrl } from "@/lib/api-client";
+import PasswordInput from "@/components/admin/PasswordInput";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -81,8 +82,7 @@ export default function LoginForm() {
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-300"
           />
-          <input
-            type="password"
+          <PasswordInput
             required
             autoComplete="current-password"
             value={password}

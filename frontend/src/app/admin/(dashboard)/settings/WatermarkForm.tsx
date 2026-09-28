@@ -111,6 +111,7 @@ export default function WatermarkForm({
           bio: profile?.bio ?? "",
           profileImage: profile?.profileImage ?? "",
           churchName: profile?.churchName ?? "",
+          churchLogoUrl: profile?.churchLogoUrl ?? "",
           contactEmail: profile?.contactEmail ?? "",
           socialLinks: profile?.socialLinks ?? {},
           watermarkType,

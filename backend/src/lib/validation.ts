@@ -55,6 +55,7 @@ export const profileInputSchema = z.object({
   bio: z.string().trim().max(2000).optional().nullable(),
   profileImage: z.string().url().optional().nullable().or(z.literal("")),
   churchName: z.string().trim().max(160).optional().nullable(),
+  churchLogoUrl: z.string().url().optional().nullable().or(z.literal("")),
   contactEmail: z
     .string()
     .trim()

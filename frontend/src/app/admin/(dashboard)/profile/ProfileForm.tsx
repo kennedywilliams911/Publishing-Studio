@@ -24,6 +24,7 @@ export default function ProfileForm({
     bio: string;
     profileImage: string | null;
     churchName: string;
+    churchLogoUrl: string | null;
     contactEmail: string;
     socialLinks: SocialLinks;
   };
@@ -36,6 +37,9 @@ export default function ProfileForm({
     initial.profileImage,
   );
   const [churchName, setChurchName] = useState(initial.churchName);
+  const [churchLogoUrl, setChurchLogoUrl] = useState<string | null>(
+    initial.churchLogoUrl,
+  );
   const [contactEmail, setContactEmail] = useState(initial.contactEmail);
   const [social, setSocial] = useState<SocialLinks>(initial.socialLinks);
   const [saving, setSaving] = useState(false);
@@ -54,6 +58,7 @@ export default function ProfileForm({
           bio,
           profileImage: profileImage || "",
           churchName,
+          churchLogoUrl: churchLogoUrl || "",
           contactEmail,
           socialLinks: social,
         }),
@@ -112,6 +117,7 @@ export default function ProfileForm({
         folder="profile"
         label="Profile Picture"
         aspect="aspect-square max-w-[160px]"
+        enableCrop
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -142,6 +148,14 @@ export default function ProfileForm({
           placeholder="A few sentences about your ministry and calling."
         />
       </Field>
+
+      <ImageUploadField
+        value={churchLogoUrl}
+        onChange={setChurchLogoUrl}
+        folder="profile"
+        label="Organization Logo"
+        aspect="aspect-square max-w-[120px]"
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Organization Name">

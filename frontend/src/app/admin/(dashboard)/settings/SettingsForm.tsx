@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, KeyRound, Trash2 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import PasswordInput from "@/components/admin/PasswordInput";
 import { apiUrl } from "@/lib/api-client";
 import type { Profile } from "@/types/profile";
 
@@ -95,6 +96,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
         bio: profile?.bio ?? "",
         profileImage: profile?.profileImage ?? "",
         churchName: profile?.churchName ?? "",
+        churchLogoUrl: profile?.churchLogoUrl ?? "",
         contactEmail: profile?.contactEmail ?? "",
         socialLinks: profile?.socialLinks ?? {},
         watermarkType: profile?.watermarkType ?? "NONE",
@@ -332,8 +334,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
             Current Password
           </label>
 
-          <input
-            type="password"
+          <PasswordInput
             required
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
@@ -346,8 +347,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
             New Password
           </label>
 
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             value={newPassword}
@@ -361,8 +361,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
             Confirm New Password
           </label>
 
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             value={confirmPassword}
@@ -403,8 +402,7 @@ export default function SettingsForm({ profile }: { profile: Profile | null }) {
             Current Password
           </label>
 
-          <input
-            type="password"
+          <PasswordInput
             value={deletePassword}
             onChange={(e) => setDeletePassword(e.target.value)}
             className={inputClass}

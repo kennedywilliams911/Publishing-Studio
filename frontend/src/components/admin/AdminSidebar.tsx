@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -48,11 +49,15 @@ const NAV = [
 
 export default function AdminSidebar({
   pastorName,
+  churchName,
+  churchLogoUrl,
   role,
   userId,
   onNavigate,
 }: {
   pastorName: string;
+  churchName?: string;
+  churchLogoUrl?: string | null;
   role?: "SUPER_ADMIN" | "ADMIN";
   userId?: string;
   onNavigate?: () => void;
@@ -73,13 +78,26 @@ export default function AdminSidebar({
   return (
     <div className="flex h-full flex-col bg-parchment-50 text-ink-800 dark:bg-ink-950 dark:text-parchment-100">
       <div className="flex items-center justify-between px-5 py-5">
-        <div>
-          <p className="font-display text-lg font-semibold text-ink-900 dark:text-parchment-50">
-            {pastorName}
-          </p>
-          <p className="text-xs uppercase tracking-wider text-gold-700/80 dark:text-gold-300/80">
-            Publishing Studio
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          {churchLogoUrl && (
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
+              <Image
+                src={churchLogoUrl}
+                alt=""
+                fill
+                sizes="40px"
+                className="object-contain"
+              />
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="truncate font-display text-lg font-semibold text-ink-900 dark:text-parchment-50">
+              {churchName?.trim() || pastorName}
+            </p>
+            <p className="text-xs uppercase tracking-wider text-gold-700/80 dark:text-gold-300/80">
+              Publishing Studio
+            </p>
+          </div>
         </div>
         <button
           onClick={onNavigate}

@@ -18,6 +18,7 @@ export type Profile = {
   bio: string | null;
   profileImage: string | null;
   churchName: string | null;
+  churchLogoUrl?: string | null;
   contactEmail: string | null;
   socialLinks: Record<string, string> | null;
   watermarkType: WatermarkType;

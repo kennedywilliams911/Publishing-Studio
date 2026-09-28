@@ -59,7 +59,7 @@ export default async function ArticlesBrowsePage({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <PublicHeader siteName={siteName} />
+      <PublicHeader siteName={siteName} logoUrl={profile?.churchLogoUrl} />
 
       <section className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:px-6">
         <h1 className="mb-2 font-display text-3xl font-semibold text-ink-900 dark:text-parchment-50">

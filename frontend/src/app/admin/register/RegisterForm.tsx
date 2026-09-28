@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { apiUrl } from "@/lib/api-client";
+import PasswordInput from "@/components/admin/PasswordInput";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const RESEND_COOLDOWN_SECONDS = 30;
@@ -140,22 +141,28 @@ export default function RegisterForm() {
                 {field === "confirmPassword"
                   ? "Confirm password"
                   : field[0].toUpperCase() + field.slice(1)}
-                <input
-                  type={
-                    field.includes("password")
-                      ? "password"
-                      : field === "email"
-                        ? "email"
-                        : "text"
-                  }
-                  required
-                  minLength={field.includes("password") ? 8 : undefined}
-                  value={form[field]}
-                  onChange={(event) =>
-                    setForm({ ...form, [field]: event.target.value })
-                  }
-                  className="mt-1.5 w-full rounded-lg border border-parchment-300 bg-parchment-50 px-3 py-2.5 text-sm outline-none focus:border-gold-400 dark:border-ink-700 dark:bg-ink-800 dark:text-parchment-50"
-                />
+                {field.includes("password") ? (
+                  <PasswordInput
+                    required
+                    minLength={8}
+                    value={form[field]}
+                    onChange={(event) =>
+                      setForm({ ...form, [field]: event.target.value })
+                    }
+                    wrapperClassName="mt-1.5"
+                    className="w-full rounded-lg border border-parchment-300 bg-parchment-50 px-3 py-2.5 text-sm outline-none focus:border-gold-400 dark:border-ink-700 dark:bg-ink-800 dark:text-parchment-50"
+                  />
+                ) : (
+                  <input
+                    type={field === "email" ? "email" : "text"}
+                    required
+                    value={form[field]}
+                    onChange={(event) =>
+                      setForm({ ...form, [field]: event.target.value })
+                    }
+                    className="mt-1.5 w-full rounded-lg border border-parchment-300 bg-parchment-50 px-3 py-2.5 text-sm outline-none focus:border-gold-400 dark:border-ink-700 dark:bg-ink-800 dark:text-parchment-50"
+                  />
+                )}
               </label>
             ),
           )}

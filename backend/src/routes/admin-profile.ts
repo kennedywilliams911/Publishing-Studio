@@ -41,6 +41,9 @@ router.patch("/", async (req, res) => {
         bio: data.bio || null,
         profileImage: data.profileImage || undefined,
         churchName: data.churchName || null,
+        ...(data.churchLogoUrl !== undefined
+          ? { churchLogoUrl: data.churchLogoUrl || null }
+          : {}),
         contactEmail: data.contactEmail || null,
         socialLinks: data.socialLinks ?? {},
         ...(data.watermarkType !== undefined
@@ -84,6 +87,7 @@ router.patch("/", async (req, res) => {
         bio: data.bio || null,
         profileImage: data.profileImage || null,
         churchName: data.churchName || null,
+        churchLogoUrl: data.churchLogoUrl || null,
         contactEmail: data.contactEmail || null,
         socialLinks: data.socialLinks ?? {},
         watermarkType: data.watermarkType ?? "NONE",
