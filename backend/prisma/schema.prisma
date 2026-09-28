@@ -285,6 +285,7 @@ model ArticleTranslation {
   language    String
   title       String
   content     String
+  sourceHash  String?
   audioUrl    String?
   generatedAt DateTime @default(now())
   article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)

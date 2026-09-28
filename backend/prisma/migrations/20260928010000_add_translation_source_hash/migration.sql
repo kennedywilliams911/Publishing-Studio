@@ -1,0 +1,1 @@
+ALTER TABLE "article_translations" ADD COLUMN "sourceHash" TEXT;

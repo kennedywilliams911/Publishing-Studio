@@ -134,6 +134,7 @@ export default async function ArticlesBrowsePage({
 
       <PublicFooter
         siteName={siteName}
+        logoUrl={profile?.churchLogoUrl}
         churchName={profile?.churchName}
         socialLinks={profile?.socialLinks ?? {}}
       />

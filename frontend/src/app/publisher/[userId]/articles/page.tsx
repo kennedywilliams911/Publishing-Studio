@@ -146,6 +146,7 @@ export default async function PublisherArticlesPage({
       </main>
       <PublicFooter
         siteName={siteName}
+        logoUrl={profile?.churchLogoUrl}
         churchName={profile?.churchName}
         socialLinks={profile?.socialLinks ?? {}}
         publisherId={userId}

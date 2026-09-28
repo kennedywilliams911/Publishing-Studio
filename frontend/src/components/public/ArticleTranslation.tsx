@@ -1,11 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+
 import ArticleReader from "@/components/public/ArticleReader";
 import TextTranslator from "@/components/public/TextTranslator";
+
 import type { Profile } from "@/types/profile";
 import type { ArticleSeries, ArticleTag } from "@/types/article";
+
+type Watermark = Pick<
+  Profile,
+  | "watermarkType"
+  | "watermarkText"
+  | "watermarkTextSize"
+  | "watermarkTextColor"
+  | "watermarkLogoUrl"
+  | "watermarkOpacity"
+  | "watermarkLogoScale"
+  | "watermarkPosition"
+>;
+
+type ArticleTranslationProps = {
+  articleId: string;
+  initialTitle: string;
+  initialContent: string;
+  featuredImage?: string | null;
+  audioUrl?: string | null;
+  publishedAt?: Date | string | null;
+  pastorName?: string | null;
+  pastorImage?: string | null;
+  tags?: ArticleTag[];
+  series?: ArticleSeries;
+  watermark?: Watermark | null;
+  translatorTargetId?: string;
+};
 
 export default function ArticleTranslation({
   articleId,
@@ -20,51 +49,62 @@ export default function ArticleTranslation({
   series,
   watermark,
   translatorTargetId,
-}: {
-  articleId: string;
-  initialTitle: string;
-  initialContent: string;
-  featuredImage?: string | null;
-  audioUrl?: string | null;
-  publishedAt?: Date | string | null;
-  pastorName?: string | null;
-  pastorImage?: string | null;
-  tags?: ArticleTag[];
-  series?: ArticleSeries;
-  watermark?: Pick<
-    Profile,
-    | "watermarkType"
-    | "watermarkText"
-    | "watermarkTextSize"
-    | "watermarkTextColor"
-    | "watermarkLogoUrl"
-    | "watermarkOpacity"
-    | "watermarkLogoScale"
-    | "watermarkPosition"
-  > | null;
-  translatorTargetId?: string;
-}) {
+}: ArticleTranslationProps) {
   const [displayTitle, setDisplayTitle] = useState(initialTitle);
   const [displayContent, setDisplayContent] = useState(initialContent);
   const [translatorTarget, setTranslatorTarget] = useState<HTMLElement | null>(
     null,
   );
 
+  /*
+   * Keep translated content in sync if the parent changes the
+   * article being displayed.
+   */
   useEffect(() => {
-    if (!translatorTargetId) return;
-    setTranslatorTarget(document.getElementById(translatorTargetId));
+    setDisplayTitle(initialTitle);
+    setDisplayContent(initialContent);
+  }, [initialTitle, initialContent]);
+
+  /*
+   * Resolve the portal target after the component has mounted.
+   *
+   * The target may not exist on the first render, so we check
+   * after mount and also clear the previous target when the ID
+   * changes.
+   */
+  useEffect(() => {
+    if (!translatorTargetId) {
+      setTranslatorTarget(null);
+      return;
+    }
+
+    const target = document.getElementById(translatorTargetId);
+    setTranslatorTarget(target);
   }, [translatorTargetId]);
 
-  const translator = (
-    <TextTranslator
-      articleId={articleId}
-      content={initialContent}
-      title={initialTitle}
-      onTranslated={(translation) => {
-        if (translation.title) setDisplayTitle(translation.title);
-        if (translation.content) setDisplayContent(translation.content);
-      }}
-    />
+  const handleTranslated = (translation: {
+    title?: string;
+    content?: string;
+  }) => {
+    if (translation.title) {
+      setDisplayTitle(translation.title);
+    }
+
+    if (translation.content) {
+      setDisplayContent(translation.content);
+    }
+  };
+
+  const translator = useMemo(
+    () => (
+      <TextTranslator
+        articleId={articleId}
+        content={initialContent}
+        title={initialTitle}
+        onTranslated={handleTranslated}
+      />
+    ),
+    [articleId, initialContent, initialTitle],
   );
 
   return (
@@ -92,11 +132,12 @@ export default function ArticleTranslation({
         </div>
 
         {!translatorTargetId && (
-          <div className="w-full lg:col-start-2 lg:justify-self-end">
+          <aside className="w-full lg:col-start-2 lg:justify-self-end">
             {translator}
-          </div>
+          </aside>
         )}
       </div>
+
       {translatorTarget && createPortal(translator, translatorTarget)}
     </div>
   );

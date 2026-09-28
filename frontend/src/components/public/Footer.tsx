@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ShieldCheck } from "lucide-react";
 import {
   SiFacebook,
@@ -19,11 +20,13 @@ type SocialLinks = {
 
 export default function PublicFooter({
   siteName,
+  logoUrl,
   churchName,
   socialLinks,
   publisherId,
 }: {
   siteName: string;
+  logoUrl?: string | null;
   churchName?: string | null;
   socialLinks?: SocialLinks | null;
   publisherId?: string;
@@ -41,14 +44,19 @@ export default function PublicFooter({
         </div>
 
         <div className="text-center">
-          <p className="font-display text-lg font-semibold text-ink-900 dark:text-parchment-50">
+          <p className="flex items-center justify-center gap-2 font-display text-lg font-semibold text-ink-900 dark:text-parchment-50">
+            {logoUrl && (
+              <Image
+                src={logoUrl}
+                alt=""
+                width={36}
+                height={36}
+                sizes="36px"
+                className="h-9 w-9 shrink-0 object-contain"
+              />
+            )}
             {siteName}
           </p>
-          {churchName && (
-            <p className="mt-1 text-sm text-ink-500 dark:text-parchment-300">
-              {churchName}
-            </p>
-          )}
 
           {socialLinks && Object.values(socialLinks).some(Boolean) && (
             <div className="mt-5 flex justify-center gap-4">

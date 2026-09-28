@@ -2,16 +2,25 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+
 import { formatDate, readingTime } from "@/lib/utils";
+
 import {
   buildWatermarkTransform,
   watermarkImageUrl,
   watermarkContentHtml,
 } from "@/lib/watermark";
+
 import type { Profile } from "@/types/profile";
 import type { ArticleSeries, ArticleTag } from "@/types/article";
 
-function stripHtmlToText(value: string) {
+/**
+ * Converts article HTML to readable plain text.
+ *
+ * This is ONLY used for browser speech synthesis.
+ * The article itself continues to render as HTML.
+ */
+function stripHtmlToText(value: string): string {
   if (!value) return "";
 
   if (typeof window === "undefined") {
@@ -22,6 +31,7 @@ function stripHtmlToText(value: string) {
   }
 
   const doc = new DOMParser().parseFromString(value, "text/html");
+
   return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
 }
 
@@ -46,7 +56,13 @@ export default function ArticleReader({
   pastorImage?: string | null;
   tags?: ArticleTag[];
   series?: ArticleSeries;
-  /** Pass the site's profile (or just its watermark fields) to apply a watermark. Omit to render unwatermarked. */
+
+  /**
+   * Pass the site's profile (or just its watermark fields)
+   * to apply a watermark.
+   *
+   * Omit to render unwatermarked.
+   */
   watermark?: Pick<
     Profile,
     | "watermarkType"
@@ -60,34 +76,63 @@ export default function ArticleReader({
   > | null;
 }) {
   const transform = buildWatermarkTransform(watermark);
+
   const displayImage = watermarkImageUrl(featuredImage, transform);
+
+  /**
+   * Important:
+   *
+   * watermarkContentHtml() must return HTML.
+   * This allows translated content to keep its formatting.
+   */
   const displayContent = watermarkContentHtml(content, transform);
+
   const [isSpeaking, setIsSpeaking] = useState(false);
+
   const [isSpeechPaused, setIsSpeechPaused] = useState(false);
+
   const [speechRate, setSpeechRate] = useState(1);
+
   const [speechGender, setSpeechGender] = useState<"female" | "male">("female");
+
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+
   const [speechSupported, setSpeechSupported] = useState(false);
 
+  /*
+   * Detect browser speech support.
+   */
   useEffect(() => {
     setSpeechSupported(
       typeof window !== "undefined" && "speechSynthesis" in window,
     );
   }, []);
 
+  /*
+   * Load available browser voices.
+   */
   useEffect(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      const updateVoices = () => setVoices(window.speechSynthesis.getVoices());
+      const updateVoices = () => {
+        setVoices(window.speechSynthesis.getVoices());
+      };
+
       updateVoices();
+
       window.speechSynthesis.addEventListener("voiceschanged", updateVoices);
-      return () =>
+
+      return () => {
         window.speechSynthesis.removeEventListener(
           "voiceschanged",
           updateVoices,
         );
+      };
     }
   }, []);
 
+  /*
+   * Stop speech when the component unmounts.
+   */
   useEffect(() => {
     return () => {
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -101,33 +146,57 @@ export default function ArticleReader({
       return;
     }
 
-    const textToRead = `${title || "Untitled article"}. ${stripHtmlToText(content)}`;
+    /*
+     * Speech synthesis needs plain text.
+     *
+     * This does NOT affect the HTML displayed
+     * in the article.
+     */
+    const textToRead = `${
+      title || "Untitled article"
+    }. ${stripHtmlToText(content)}`;
+
     const synth = window.speechSynthesis;
 
     if (isSpeaking) {
       synth.cancel();
+
       setIsSpeaking(false);
       setIsSpeechPaused(false);
+
       return;
     }
 
     const utterance = new SpeechSynthesisUtterance(textToRead);
+
     utterance.rate = speechRate;
+
     const genderNames = {
       female: /female|woman|girl|samantha|karen|zira|victoria|susan|anna|sara/i,
+
       male: /male|man|boy|david|mark|daniel|george|alex|james/i,
     };
+
     const selectedVoice = voices.find((voice) =>
       genderNames[speechGender].test(voice.name),
     );
-    if (selectedVoice) utterance.voice = selectedVoice;
-    // Most browsers do not expose voice gender metadata. Pitch provides a
-    // sensible fallback when the platform does not name voices by gender.
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    /*
+     * Most browsers do not expose voice gender metadata.
+     * Pitch provides a fallback when voice names don't
+     * identify the gender.
+     */
     utterance.pitch = speechGender === "female" ? 1.1 : 0.9;
+
     utterance.onend = () => {
       setIsSpeaking(false);
       setIsSpeechPaused(false);
     };
+
     utterance.onerror = () => {
       setIsSpeaking(false);
       setIsSpeechPaused(false);
@@ -135,12 +204,15 @@ export default function ArticleReader({
 
     synth.cancel();
     synth.speak(utterance);
+
     setIsSpeaking(true);
     setIsSpeechPaused(false);
   };
 
   const handlePauseOrResumeAudio = () => {
-    if (!speechSupported || !isSpeaking) return;
+    if (!speechSupported || !isSpeaking) {
+      return;
+    }
 
     if (isSpeechPaused) {
       window.speechSynthesis.resume();
@@ -167,18 +239,23 @@ export default function ArticleReader({
                 />
               </div>
             ) : null}
+
             <span className="text-sm font-medium text-ink-600 dark:text-parchment-300">
               {pastorName}
             </span>
           </div>
         )}
+
         <h1 className="text-balance font-display text-3xl font-semibold leading-tight text-ink-900 dark:text-parchment-50 sm:text-4xl">
           {title || "Untitled article"}
         </h1>
+
         <p className="mt-4 text-sm text-ink-400 dark:text-parchment-400">
           {publishedAt ? formatDate(publishedAt) : "Not yet published"}
+
           {content && <> · {readingTime(content)}</>}
         </p>
+
         {(series || tags?.length) && (
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs">
             {series && (
@@ -186,6 +263,7 @@ export default function ArticleReader({
                 Series: {series.title}
               </span>
             )}
+
             {tags?.map((tag) => (
               <span
                 key={tag.id}
@@ -215,6 +293,7 @@ export default function ArticleReader({
           <p className="text-sm font-semibold text-ink-800 dark:text-parchment-100">
             Listen to this article
           </p>
+
           {speechSupported && (
             <div className="flex flex-wrap items-center justify-end gap-2">
               <select
@@ -227,8 +306,10 @@ export default function ArticleReader({
                 className="rounded-full border border-ink-300 bg-transparent px-2 py-1.5 text-xs text-ink-700 dark:border-ink-600 dark:text-parchment-200"
               >
                 <option value="female">Female voice</option>
+
                 <option value="male">Male voice</option>
               </select>
+
               <select
                 aria-label="Narration speed"
                 value={speechRate}
@@ -237,10 +318,14 @@ export default function ArticleReader({
                 className="rounded-full border border-ink-300 bg-transparent px-2 py-1.5 text-xs text-ink-700 dark:border-ink-600 dark:text-parchment-200"
               >
                 <option value={0.75}>0.75x</option>
+
                 <option value={1}>1x</option>
+
                 <option value={1.25}>1.25x</option>
+
                 <option value={1.5}>1.5x</option>
               </select>
+
               <button
                 type="button"
                 onClick={handleToggleAudio}
@@ -248,6 +333,7 @@ export default function ArticleReader({
               >
                 {isSpeaking ? "Stop audio" : "Read aloud"}
               </button>
+
               {isSpeaking && (
                 <button
                   type="button"
@@ -276,8 +362,44 @@ export default function ArticleReader({
         )}
       </div>
 
+      {/*
+       * ARTICLE CONTENT
+       *
+       * Keep this as HTML.
+       *
+       * The translated content from TextTranslator is
+       * sanitized HTML, so ArticleReader can preserve:
+       *
+       * - paragraphs
+       * - headings
+       * - bold
+       * - italic
+       * - links
+       * - ordered lists
+       * - unordered lists
+       * - blockquotes
+       * - line breaks
+       * - code/preformatted sections
+       *
+       * The Tailwind Typography classes below style both
+       * the original article and translated article.
+       */}
       <div
-        className="article-body prose prose-lg max-w-none font-serif-body text-ink-800 prose-headings:font-display prose-headings:text-ink-900 prose-a:text-gold-700 dark:prose-invert dark:text-parchment-100 dark:prose-headings:text-parchment-50 dark:prose-a:text-gold-400"
+        className="
+          article-body
+          prose
+          prose-lg
+          max-w-none
+          font-serif-body
+          text-ink-800
+          prose-headings:font-display
+          prose-headings:text-ink-900
+          prose-a:text-gold-700
+          dark:prose-invert
+          dark:text-parchment-100
+          dark:prose-headings:text-parchment-50
+          dark:prose-a:text-gold-400
+        "
         dangerouslySetInnerHTML={{
           __html:
             displayContent ||
