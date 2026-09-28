@@ -285,7 +285,7 @@ export default function WatermarkForm({
           onChange={setWatermarkLogoUrl}
           folder="watermark"
           label="Watermark Logo"
-          aspect="aspect-square max-w-[140px]"
+          aspect="aspect-square max-w-[180px]"
         />
       )}
 

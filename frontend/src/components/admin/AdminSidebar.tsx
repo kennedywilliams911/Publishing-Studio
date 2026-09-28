@@ -50,14 +50,14 @@ const NAV = [
 export default function AdminSidebar({
   pastorName,
   churchName,
-  churchLogoUrl,
+  profileImage,
   role,
   userId,
   onNavigate,
 }: {
   pastorName: string;
   churchName?: string;
-  churchLogoUrl?: string | null;
+  profileImage?: string | null;
   role?: "SUPER_ADMIN" | "ADMIN";
   userId?: string;
   onNavigate?: () => void;
@@ -79,10 +79,10 @@ export default function AdminSidebar({
     <div className="flex h-full flex-col bg-parchment-50 text-ink-800 dark:bg-ink-950 dark:text-parchment-100">
       <div className="flex items-center justify-between px-5 py-5">
         <div className="flex min-w-0 items-center gap-3">
-          {churchLogoUrl && (
-            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">
+          {profileImage && (
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
               <Image
-                src={churchLogoUrl}
+                src={profileImage}
                 alt=""
                 fill
                 sizes="40px"

@@ -116,7 +116,7 @@ export default function ProfileForm({
         onChange={setProfileImage}
         folder="profile"
         label="Profile Picture"
-        aspect="aspect-square max-w-[160px]"
+        aspect="aspect-square max-w-[180px]"
         enableCrop
       />
 
@@ -154,7 +154,7 @@ export default function ProfileForm({
         onChange={setChurchLogoUrl}
         folder="profile"
         label="Organization Logo"
-        aspect="aspect-square max-w-[120px]"
+        aspect="aspect-square max-w-[180px]"
       />
 
       <div className="grid gap-4 sm:grid-cols-2">

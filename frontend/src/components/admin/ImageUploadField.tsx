@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { apiUrl } from "@/lib/api-client";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const MAX_SIZE_BYTES = 8 * 1024 * 1024;
+const MAX_SIZE_MB = { profile: 20, articles: 20, watermark: 8 } as const;
 
 type CropArea = { x: number; y: number; width: number; height: number };
 
@@ -74,6 +74,8 @@ export default function ImageUploadField({
   aspect?: string;
   enableCrop?: boolean;
 }) {
+  const maxSizeMb = MAX_SIZE_MB[folder];
+  const maxSizeBytes = maxSizeMb * 1024 * 1024;
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [cropSource, setCropSource] = useState<string | null>(null);
@@ -94,8 +96,10 @@ export default function ImageUploadField({
         toast.error("Please upload a JPG, PNG, WebP or AVIF image.");
         return;
       }
-      if (file.size > MAX_SIZE_BYTES) {
-        toast.error("That image is too large. Please use a file under 8MB.");
+      if (file.size > maxSizeBytes) {
+        toast.error(
+          `That image is too large. Please use a file under ${maxSizeMb}MB.`,
+        );
         return;
       }
 
@@ -140,7 +144,7 @@ export default function ImageUploadField({
         setUploading(false);
       }
     },
-    [folder, onChange],
+    [folder, maxSizeBytes, maxSizeMb, onChange],
   );
 
   const selectFile = useCallback(
@@ -149,8 +153,10 @@ export default function ImageUploadField({
         toast.error("Please upload a JPG, PNG, WebP or AVIF image.");
         return;
       }
-      if (file.size > MAX_SIZE_BYTES) {
-        toast.error("That image is too large. Please use a file under 8MB.");
+      if (file.size > maxSizeBytes) {
+        toast.error(
+          `That image is too large. Please use a file under ${maxSizeMb}MB.`,
+        );
         return;
       }
 
@@ -165,7 +171,7 @@ export default function ImageUploadField({
       setZoom(1);
       setCroppedArea(null);
     },
-    [enableCrop, upload],
+    [enableCrop, maxSizeBytes, maxSizeMb, upload],
   );
 
   async function confirmCrop() {
@@ -267,7 +273,7 @@ export default function ImageUploadField({
                 or drag and drop
               </p>
               <p className="text-xs text-ink-400 dark:text-parchment-500">
-                JPG, PNG, WebP up to 8MB
+                JPG, PNG, WebP up to {maxSizeMb}MB
               </p>
             </>
           )}
