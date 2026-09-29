@@ -161,6 +161,7 @@ function replaceKnownWords(text: string, targetLanguage: string): string {
 const MAX_CHUNK_LENGTH = 800;
 const TRANSLATION_CONCURRENCY = 2;
 const TRANSLATION_RETRIES = 2;
+const MYMEMORY_RATE_LIMIT_COOLDOWN_MS = 60_000;
 
 const TRANSLATION_CACHE_TTL_MS = 60 * 60 * 1000;
 const TRANSLATION_CACHE_MAX_ENTRIES = 100;
@@ -173,6 +174,7 @@ type CachedTranslation = {
 const translationCache = new Map<string, CachedTranslation>();
 
 const inFlightTranslations = new Map<string, Promise<string>>();
+let myMemoryRateLimitedUntil = 0;
 
 /* -------------------------------------------------------------------------- */
 /* Utilities                                                                    */
@@ -220,6 +222,10 @@ async function withTranslationRetry<T>(
       return await operation();
     } catch (error) {
       lastError = error;
+
+      if (provider === "MyMemory" && /\b429\b/.test(String(error))) {
+        throw error;
+      }
 
       if (!isRetryableTranslationError(error) || attempt >= retries) {
         throw error;
@@ -432,6 +438,10 @@ async function translateChunkWithMyMemory(
   text: string,
   targetLanguage: string,
 ): Promise<string | null> {
+  if (Date.now() < myMemoryRateLimitedUntil) {
+    return null;
+  }
+
   try {
     return await withTranslationRetry(async () => {
       const url = new URL("https://api.mymemory.translated.net/get");
@@ -487,7 +497,16 @@ async function translateChunkWithMyMemory(
       return translated.trim();
     }, "MyMemory");
   } catch (error) {
-    console.warn("MyMemory translation unavailable:", error);
+    if (
+      /\b429\b/.test(error instanceof Error ? error.message : String(error))
+    ) {
+      myMemoryRateLimitedUntil = Date.now() + MYMEMORY_RATE_LIMIT_COOLDOWN_MS;
+      console.warn(
+        "MyMemory rate limit reached; pausing requests for 60 seconds.",
+      );
+    } else {
+      console.warn("MyMemory translation unavailable:", error);
+    }
 
     return null;
   }

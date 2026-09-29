@@ -1,7 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { formatDate, readingTime } from "@/lib/utils";
 
@@ -13,6 +20,105 @@ import {
 
 import type { Profile } from "@/types/profile";
 import type { ArticleSeries, ArticleTag } from "@/types/article";
+
+const WORDS_PER_PAGE = 700;
+const VOID_HTML_TAGS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
+
+function subscribeToSpeechSupport() {
+  return () => {};
+}
+
+function getSpeechSupportSnapshot() {
+  return typeof window !== "undefined" && "speechSynthesis" in window;
+}
+
+function getServerSpeechSupportSnapshot() {
+  return false;
+}
+
+function splitArticleBlocks(content: string): string[] {
+  const blocks: string[] = [];
+  const tagPattern = /<\/?([a-z][\w:-]*)\b[^>]*>/gi;
+  const openTags: string[] = [];
+  let blockStart = -1;
+  let lastBlockEnd = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = tagPattern.exec(content))) {
+    const tagName = match[1].toLowerCase();
+    const isClosingTag = match[0][1] === "/";
+
+    if (openTags.length === 0 && blockStart === -1) {
+      const textBeforeTag = content.slice(lastBlockEnd, match.index);
+      if (textBeforeTag.trim()) blocks.push(textBeforeTag);
+      blockStart = match.index;
+    }
+
+    if (isClosingTag) {
+      const openTagIndex = openTags.lastIndexOf(tagName);
+      if (openTagIndex !== -1) openTags.splice(openTagIndex);
+    } else if (!VOID_HTML_TAGS.has(tagName) && !/\/\s*>$/.test(match[0])) {
+      openTags.push(tagName);
+    }
+
+    if (openTags.length === 0 && blockStart !== -1) {
+      blocks.push(content.slice(blockStart, tagPattern.lastIndex));
+      blockStart = -1;
+      lastBlockEnd = tagPattern.lastIndex;
+    }
+  }
+
+  const remainingContent = content.slice(
+    blockStart === -1 ? lastBlockEnd : blockStart,
+  );
+  if (remainingContent.trim()) blocks.push(remainingContent);
+
+  return blocks.length > 0 ? blocks : [content];
+}
+
+function paginateArticleContent(content: string): string[] {
+  const pages: string[] = [];
+  let pageBlocks: string[] = [];
+  let pageWordCount = 0;
+
+  for (const block of splitArticleBlocks(content)) {
+    const blockWordCount =
+      block
+        .replace(/<[^>]*>/g, " ")
+        .trim()
+        .match(/\S+/g)?.length ?? 0;
+
+    if (
+      pageBlocks.length > 0 &&
+      pageWordCount + blockWordCount > WORDS_PER_PAGE
+    ) {
+      pages.push(pageBlocks.join(""));
+      pageBlocks = [];
+      pageWordCount = 0;
+    }
+
+    pageBlocks.push(block);
+    pageWordCount += blockWordCount;
+  }
+
+  if (pageBlocks.length > 0) pages.push(pageBlocks.join(""));
+  return pages.length > 0 ? pages : [content];
+}
 
 /**
  * Converts article HTML to readable plain text.
@@ -97,16 +203,32 @@ export default function ArticleReader({
 
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
-  const [speechSupported, setSpeechSupported] = useState(false);
+  const speechSupported = useSyncExternalStore(
+    subscribeToSpeechSupport,
+    getSpeechSupportSnapshot,
+    getServerSpeechSupportSnapshot,
+  );
+  const articlePages = useMemo(
+    () => paginateArticleContent(displayContent),
+    [displayContent],
+  );
+  const [pageSelection, setPageSelection] = useState({
+    content: displayContent,
+    page: 0,
+  });
+  const currentPage =
+    pageSelection.content === displayContent ? pageSelection.page : 0;
+  const articleContentRef = useRef<HTMLDivElement>(null);
 
-  /*
-   * Detect browser speech support.
-   */
-  useEffect(() => {
-    setSpeechSupported(
-      typeof window !== "undefined" && "speechSynthesis" in window,
-    );
-  }, []);
+  function goToPage(pageIndex: number) {
+    setPageSelection({ content: displayContent, page: pageIndex });
+    requestAnimationFrame(() => {
+      articleContentRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
 
   /*
    * Load available browser voices.
@@ -385,6 +507,7 @@ export default function ArticleReader({
        * the original article and translated article.
        */}
       <div
+        ref={articleContentRef}
         className="
           article-body
           prose
@@ -399,13 +522,46 @@ export default function ArticleReader({
           dark:text-parchment-100
           dark:prose-headings:text-parchment-50
           dark:prose-a:text-gold-400
+          scroll-mt-24
         "
         dangerouslySetInnerHTML={{
           __html:
-            displayContent ||
+            articlePages[currentPage] ||
             "<p class='italic text-ink-400'>Nothing written yet.</p>",
         }}
       />
+
+      {articlePages.length > 1 && (
+        <nav
+          aria-label="Article pages"
+          className="mt-8 flex items-center justify-between gap-3 border-t border-parchment-300 pt-4 dark:border-ink-800"
+        >
+          <button
+            type="button"
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 0}
+            className="inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-medium text-ink-700 transition hover:bg-parchment-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-parchment-200 dark:hover:bg-ink-800"
+          >
+            <ChevronLeft size={16} />
+            Previous
+          </button>
+          <p
+            className="shrink-0 text-sm text-ink-500 dark:text-parchment-400"
+            aria-live="polite"
+          >
+            Page {currentPage + 1} of {articlePages.length}
+          </p>
+          <button
+            type="button"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === articlePages.length - 1}
+            className="inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-medium text-ink-700 transition hover:bg-parchment-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-parchment-200 dark:hover:bg-ink-800"
+          >
+            Next
+            <ChevronRight size={16} />
+          </button>
+        </nav>
+      )}
     </article>
   );
 }

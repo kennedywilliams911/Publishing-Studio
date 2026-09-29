@@ -110,6 +110,7 @@ export default async function PublisherArticlePage({
         logoUrl={profile?.churchLogoUrl}
         homeHref={publisherPath}
         articlesHref={articlesPath}
+        showSignIn={false}
       />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 md:px-6">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_360px] lg:items-start">

@@ -78,87 +78,13 @@ export default function NotFoundPage() {
                   Back home
                 </Link>
 
-                <Link
-                  href="/articles"
-                  className="inline-flex items-center gap-2 rounded-full border border-ink-200 bg-white/80 px-5 py-3 text-sm font-semibold text-ink-700 shadow-sm transition hover:-translate-y-0.5 hover:border-gold-400 hover:text-gold-700 dark:border-ink-700 dark:bg-ink-900/80 dark:text-parchment-200 dark:hover:border-gold-500 dark:hover:text-gold-300"
-                >
-                  <ArrowLeft size={16} />
-                  Explore articles
-                </Link>
+            
               </div>
 
-              <div className="mt-10 flex flex-wrap gap-3">
-                {suggestedLinks.map(({ label, href, icon: Icon }) => (
-                  <Link
-                    key={label}
-                    href={href}
-                    className="inline-flex items-center gap-2 rounded-full border border-parchment-300 bg-white/70 px-3.5 py-2 text-sm font-medium text-ink-600 transition hover:border-gold-400 hover:text-gold-700 dark:border-ink-700 dark:bg-ink-900/70 dark:text-parchment-300 dark:hover:border-gold-500 dark:hover:text-gold-300"
-                  >
-                    <Icon size={15} />
-                    {label}
-                    <ArrowRight size={15} />
-                  </Link>
-                ))}
-              </div>
+              
             </div>
 
-            <div className="relative">
-              <div className="paper-lift rounded-4xl border border-parchment-300 bg-white/80 p-6 shadow-[0_30px_80px_-40px_rgba(15,20,40,0.45)] backdrop-blur-sm dark:border-ink-800 dark:bg-ink-900/85">
-                <div className="rounded-3xl border border-parchment-200 bg-linear-to-br from-parchment-50 via-white to-gold-50 p-5 dark:border-ink-700 dark:from-ink-950 dark:via-ink-900 dark:to-ink-950">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500 dark:text-parchment-400">
-                        Quick links
-                      </p>
-                      <h2 className="mt-2 font-display text-2xl font-semibold text-ink-900 dark:text-parchment-50">
-                        You may be looking for
-                      </h2>
-                    </div>
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full border border-gold-300 bg-gold-100 text-gold-700 dark:border-gold-500/40 dark:bg-gold-500/10 dark:text-gold-300">
-                      <Compass size={18} />
-                    </div>
-                  </div>
-
-                  <div className="mt-6 space-y-3">
-                    <Link
-                      href="/articles"
-                      className="group flex items-center justify-between rounded-2xl border border-parchment-200 bg-white/90 p-4 transition hover:border-gold-400 hover:shadow-sm dark:border-ink-700 dark:bg-ink-900"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-ink-800 dark:text-parchment-100">
-                          Latest articles
-                        </p>
-                        <p className="mt-1 text-sm text-ink-500 dark:text-parchment-400">
-                          Browse fresh stories and publications
-                        </p>
-                      </div>
-                      <ArrowRight
-                        size={16}
-                        className="text-ink-400 transition group-hover:text-gold-700 dark:text-parchment-500 dark:group-hover:text-gold-400"
-                      />
-                    </Link>
-
-                    <Link
-                      href="/admin/login"
-                      className="group flex items-center justify-between rounded-2xl border border-parchment-200 bg-white/90 p-4 transition hover:border-gold-400 hover:shadow-sm dark:border-ink-700 dark:bg-ink-900"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-ink-800 dark:text-parchment-100">
-                          Admin access
-                        </p>
-                        <p className="mt-1 text-sm text-ink-500 dark:text-parchment-400">
-                          Sign in to manage your studio
-                        </p>
-                      </div>
-                      <ArrowRight
-                        size={16}
-                        className="text-ink-400 transition group-hover:text-gold-700 dark:text-parchment-500 dark:group-hover:text-gold-400"
-                      />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+ 
           </div>
         </div>
       </main>

@@ -10,6 +10,9 @@ import { apiUrl } from "@/lib/api-client";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const MAX_SIZE_MB = { profile: 20, articles: 20, watermark: 8 } as const;
+const CLOUDINARY_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+const TARGET_UPLOAD_SIZE_BYTES = 9 * 1024 * 1024;
+const MAX_UPLOAD_DIMENSION = 1600;
 
 type CropArea = { x: number; y: number; width: number; height: number };
 
@@ -59,6 +62,54 @@ async function createCroppedFile(
   });
 }
 
+async function optimizeImageForUpload(file: File) {
+  const image = await createImageBitmap(file);
+
+  try {
+    const scale = Math.min(
+      1,
+      MAX_UPLOAD_DIMENSION / Math.max(image.width, image.height),
+    );
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Could not optimize this image.");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    for (const quality of [0.9, 0.82, 0.74, 0.66, 0.58]) {
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (result) =>
+            result
+              ? resolve(result)
+              : reject(new Error("Could not optimize this image.")),
+          "image/webp",
+          quality,
+        );
+      });
+
+      if (blob.type !== "image/webp") {
+        throw new Error(
+          "Your browser could not optimize this image for upload.",
+        );
+      }
+
+      if (blob.size <= TARGET_UPLOAD_SIZE_BYTES) {
+        const fileName = file.name.replace(/\.[^.]+$/, "");
+        return new File([blob], `${fileName}.webp`, { type: "image/webp" });
+      }
+    }
+
+    throw new Error(
+      `This image could not be reduced below ${Math.floor(CLOUDINARY_MAX_SIZE_BYTES / (1024 * 1024))}MB. Try a smaller image.`,
+    );
+  } finally {
+    image.close();
+  }
+}
+
 export default function ImageUploadField({
   value,
   onChange,
@@ -105,8 +156,12 @@ export default function ImageUploadField({
 
       setUploading(true);
       try {
+        const uploadFile =
+          file.size > TARGET_UPLOAD_SIZE_BYTES
+            ? await optimizeImageForUpload(file)
+            : file;
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", uploadFile);
         formData.append("folder", folder);
         const uploadEndpoint =
           folder === "watermark" ? "/api/upload" : "/api/admin/upload";
@@ -136,9 +191,11 @@ export default function ImageUploadField({
         }
         onChange(data.url);
         toast.success("Image updated successfully.");
-      } catch {
+      } catch (error) {
         toast.error(
-          "Something went wrong while uploading the image. Please try again.",
+          error instanceof Error
+            ? error.message
+            : "Something went wrong while uploading the image. Please try again.",
         );
       } finally {
         setUploading(false);

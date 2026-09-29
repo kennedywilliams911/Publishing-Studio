@@ -160,20 +160,23 @@ export default function AudioUploadField({
       />
 
       {audioUrl ? (
-        <div className="flex items-center gap-3 rounded-lg bg-green-50 p-4 dark:bg-green-950/20">
-          <Music size={20} className="text-green-700 dark:text-green-400" />
-          <div className="flex-1">
+        <div className="flex min-w-0 items-center gap-3 rounded-lg bg-green-50 p-4 dark:bg-green-950/20">
+          <Music
+            size={20}
+            className="shrink-0 text-green-700 dark:text-green-400"
+          />
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-green-900 dark:text-green-300">
               Audio uploaded
             </p>
-            <p className="truncate text-xs text-green-700 dark:text-green-400">
+            <p className="break-all text-xs text-green-700 dark:text-green-400">
               {audioUrl}
             </p>
           </div>
           <button
             type="button"
             onClick={handleClear}
-            className="rounded-lg p-1 hover:bg-green-200 dark:hover:bg-green-900"
+            className="shrink-0 rounded-lg p-1 hover:bg-green-200 dark:hover:bg-green-900"
           >
             <X size={18} className="text-green-700 dark:text-green-400" />
           </button>

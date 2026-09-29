@@ -48,7 +48,11 @@ export default function CommentsSection({
         }
 
         const data = await response.json();
-        const nextComments = Array.isArray(data.comments) ? data.comments : [];
+        const nextComments = Array.isArray(data.comments)
+          ? data.comments
+          : Array.isArray(data.approved)
+            ? data.approved
+            : [];
         setNewComments(nextComments);
       } catch {
         setNewComments([]);
@@ -93,7 +97,7 @@ export default function CommentsSection({
       <div className="mb-8 flex items-center gap-3">
         <MessageCircle size={24} className="text-gold-700 dark:text-gold-400" />
         <h3 className="font-display text-2xl font-semibold text-ink-900 dark:text-parchment-50">
-          Discussion
+          Comment Section
         </h3>
       </div>
 

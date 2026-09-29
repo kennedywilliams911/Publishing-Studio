@@ -11,12 +11,14 @@ export default function PublicHeader({
   homeHref = "/",
   articlesHref = "/articles",
   showArticles = true,
+  showSignIn = true,
 }: {
   siteName: string;
   logoUrl?: string | null;
   homeHref?: string;
   articlesHref?: string;
   showArticles?: boolean;
+  showSignIn?: boolean;
 }) {
   return (
     <header
@@ -49,13 +51,15 @@ export default function PublicHeader({
               Articles
             </Link>
           )}
-          <Link
-            href="/admin/login"
-            className="inline-flex items-center gap-2 rounded-full border border-ink-200 bg-white/80 px-3 py-1.5 text-xs font-semibold tracking-wide text-ink-700 shadow-sm transition hover:-translate-y-0.5 hover:border-gold-400 hover:text-gold-700 dark:border-ink-700 dark:bg-ink-900/80 dark:text-parchment-200 dark:hover:border-gold-500 dark:hover:text-gold-300"
-          >
-            <ShieldCheck size={14} />
-            Sign in
-          </Link>
+          {showSignIn && (
+            <Link
+              href="/admin/login"
+              className="inline-flex items-center gap-2 rounded-full border border-ink-200 bg-white/80 px-3 py-1.5 text-xs font-semibold tracking-wide text-ink-700 shadow-sm transition hover:-translate-y-0.5 hover:border-gold-400 hover:text-gold-700 dark:border-ink-700 dark:bg-ink-900/80 dark:text-parchment-200 dark:hover:border-gold-500 dark:hover:text-gold-300"
+            >
+              <ShieldCheck size={14} />
+              Sign in
+            </Link>
+          )}
           <div className="hidden sm:block">
             <Suspense fallback={null}>
               <SearchBar articlesHref={articlesHref} />
